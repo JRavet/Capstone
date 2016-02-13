@@ -1,3 +1,4 @@
+//VERSION 1.0.0.0
 #include <iostream>
 //cURLpp
 #include <curlpp/cURLpp.hpp>
@@ -74,7 +75,7 @@ int main (int argc, char *argv[])
 		sql::Statement *stmt;
  		sql::ResultSet *res;
 		driver = sql::mysql::get_mysql_driver_instance();
-		con = driver->connect("tcp://127.0.0.1:3306", "root", "jorda11n");
+		con = driver->connect("tcp://127.0.0.1:3306", "root", "egamirrorimeht");
 
 		stmt = con->createStatement();
 		stmt->execute("USE Gw2Analyser");
