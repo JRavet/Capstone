@@ -1,4 +1,3 @@
-//VERSION 1.0.0.0
 #include <iostream>
 //cURLpp
 #include <curlpp/cURLpp.hpp>

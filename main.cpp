@@ -1,4 +1,3 @@
-//VERSION 1.0.0.1
 #include <iostream>
 //cURLpp
 #include <curlpp/cURLpp.hpp>
@@ -164,7 +163,7 @@ void get_matchDetails(string matchID, sql::Connection *con)
 		/* */
 		request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 		request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches/" + matchID));
-		request.perform();
+		request.perform(); //TODO: consider ?ids=all?
 		/* */
 		bool parsingSuccessful = reader.parse(matchDetails.str(), root);
 		if (!parsingSuccessful)
@@ -197,13 +196,15 @@ int main (int argc, char *argv[])
 		stmt->execute("USE Gw2Analyser");
 		delete stmt;
 		//
+		clock_t beginTime, endTime;
     	while (1)
 		{
-			clock_t begin = clock();
+			beginTime = clock();
 			get_matchDetails("1-4", con);
-			clock_t end = clock();
+			endTime = clock();
 			double elapsed_msecs = double(end - begin) / CLOCKS_PER_SEC * microSec;
-			//usleep(microSec*5 - elapsed_msecs);
+			cout << elapsed_msecs << endl;
+			usleep(microSec*5 - elapsed_msecs);
 		}
 		delete con;
 		/*
