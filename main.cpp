@@ -17,6 +17,9 @@
 #include "mysql_driver.h"
 //timing
 #include <ctime>
+#define FIRST_SRV "green"
+#define SECOND_SRV "blue"
+#define THIRD_SRV "red"
 /* */
 using namespace cURLpp;
 using namespace Options;
@@ -51,14 +54,14 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	{
 		Easy request;
 		stringstream guildDetails;
-		Json::Value root;
+		Json::Value guild_data;
 		Json::Reader reader;
 		/* */
 		request.setOpt(cURLpp::Options::WriteStream(&guildDetails));
 		request.setOpt(Url("https://api.guildwars2.com/v1/guild_details.json?guild_id=" + guildID));
 		request.perform();
 		/* */
-		bool parsingSuccessful = reader.parse(guildDetails.str(), root);
+		bool parsingSuccessful = reader.parse(guildDetails.str(), guild_data);
 		if (!parsingSuccessful)
 		{
 			cout << "Failed to parse configuration\n" 
@@ -68,7 +71,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 		/* */
 		try
 		{
-			stmt->execute("INSERT INTO guild VALUES(\"" + guildID + "\",\"" + root["guild_name"].asString() + "\",\"" + root["tag"].asString() + "\");");
+			stmt->execute("INSERT INTO guild VALUES(\"" + guildID + "\",\"" + guild_data["guild_name"].asString() + "\",\"" + guild_data["tag"].asString() + "\");");
 		}
 		catch (sql::SQLException &e)
 		{
@@ -79,12 +82,12 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	delete res;
 }
 /* */
-void store_activityData(const Json::Value *root, int mapNum, sql::Connection *con)
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con)
 {
 	stringstream converter;
 	sql::Statement *stmt;
 	string SQLstmt = "";
-	const Json::Value objectives = (*root)["maps"][mapNum]["objectives"];
+	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"];
 	for (int i = 0; i < (int)objectives.size(); i++)
 	{
 		SQLstmt = "INSERT INTO activity_data VALUES(";
@@ -93,15 +96,15 @@ void store_activityData(const Json::Value *root, int mapNum, sql::Connection *co
 		//
 		if (objectives[i]["owner"].asString() == "Red")
 		{
-			convertNumToString(&converter,(*root)["worlds"]["red"].asInt(),&SQLstmt);
+			convertNumToString(&converter,(*match_data)["worlds"][THIRD_SRV].asInt(),&SQLstmt);
 		}
 		else if (objectives[i]["owner"].asString() == "Blue")
 		{
-			convertNumToString(&converter,(*root)["worlds"]["blue"].asInt(),&SQLstmt);
+			convertNumToString(&converter,(*match_data)["worlds"][SECOND_SRV].asInt(),&SQLstmt);
 		}
 		else if (objectives[i]["owner"].asString() == "Green")
 		{
-			convertNumToString(&converter,(*root)["worlds"]["green"].asInt(),&SQLstmt);
+			convertNumToString(&converter,(*match_data)["worlds"][FIRST_SRV].asInt(),&SQLstmt);
 		}
 		else
 		{
@@ -112,8 +115,8 @@ void store_activityData(const Json::Value *root, int mapNum, sql::Connection *co
 		SQLstmt += ",15"; //tick_timer
 		SQLstmt += ",\"" + objectives[i]["owner"].asString() + "\"";
 		SQLstmt += ",\"" + objectives[i]["claimed_at"].asString() + "\"";
-		SQLstmt += ",\"" + (*root)["id"].asString() + "\"";
-		SQLstmt += ",\"" + (*root)["start_time"].asString() + "\"";
+		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
+		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
 		SQLstmt += ");";
 		try
 		{
@@ -129,20 +132,20 @@ void store_activityData(const Json::Value *root, int mapNum, sql::Connection *co
 	}
 }
 /* */
-void store_matchDetails(const Json::Value *root, sql::Connection *con)
+void store_matchDetails(const Json::Value *match_data, sql::Connection *con)
 {
 	stringstream converter;
 	sql::Statement *stmt;
 	string SQLstmt = "INSERT INTO match_details VALUES(";
-	SQLstmt += "\"" + (*root)["id"].asString() + "\"";
+	SQLstmt += "\"" + (*match_data)["id"].asString() + "\"";
 	SQLstmt += ",3"; //weekNumber
-	SQLstmt += ",\"" + (*root)["start_time"].asString() + "\"";
-	SQLstmt += ",\"" + (*root)["end_time"].asString() + "\",";
-	convertNumToString(&converter, (*root)["worlds"]["green"].asInt(),&SQLstmt);
+	SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
+	SQLstmt += ",\"" + (*match_data)["end_time"].asString() + "\",";
+	convertNumToString(&converter, (*match_data)["worlds"][FIRST_SRV].asInt(),&SQLstmt);
 	SQLstmt += ",";
-	convertNumToString(&converter, (*root)["worlds"]["blue"].asInt(),&SQLstmt);
+	convertNumToString(&converter, (*match_data)["worlds"][SECOND_SRV].asInt(),&SQLstmt);
 	SQLstmt += ",";
-	convertNumToString(&converter, (*root)["worlds"]["red"].asInt(),&SQLstmt);
+	convertNumToString(&converter, (*match_data)["worlds"][THIRD_SRV].asInt(),&SQLstmt);
 	SQLstmt += ");";
 	//
 	try
@@ -157,7 +160,7 @@ void store_matchDetails(const Json::Value *root, sql::Connection *con)
 	}
 }
 /* */
-void store_mapScores(const Json::Value *root, int mapNum, sql::Connection *con)
+void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -175,26 +178,26 @@ void store_mapScores(const Json::Value *root, int mapNum, sql::Connection *con)
     convertNumToString(&converter,((*UTCTime).tm_min),&SQLstmt);
     SQLstmt += ":";
     convertNumToString(&converter,((*UTCTime).tm_sec),&SQLstmt);
-    SQLstmt += "\",\"" + (*root)["id"].asString() + "\"";
-    SQLstmt += ",\"" + (*root)["start_time"].asString() + "\"";
-    SQLstmt += ",\"" + (*root)["maps"][mapNum]["type"].asString() + "\",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["scores"]["green"].asInt()),&SQLstmt);
+    SQLstmt += "\",\"" + (*match_data)["id"].asString() + "\"";
+    SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
+    SQLstmt += ",\"" + (*match_data)["maps"][mapNum]["type"].asString() + "\",";
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][FIRST_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["scores"]["blue"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][SECOND_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["scores"]["red"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][THIRD_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["kills"]["green"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["kills"]["blue"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["kills"]["red"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["deaths"]["green"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][FIRST_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["deaths"]["blue"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][SECOND_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*root)["maps"][mapNum]["deaths"]["red"].asInt()),&SQLstmt);
+    convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][THIRD_SRV].asInt()),&SQLstmt);
     SQLstmt += ");";
     try
 	{
@@ -212,30 +215,30 @@ void get_matchDetails(string matchID, sql::Connection *con)
 {
 		Easy request;
 		stringstream matchDetails;
-		Json::Value root;
-		Json::Reader reader;
+		Json::Value match_data;
+		Json::Reader parser;
 		/* */
 		request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 		request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches/" + matchID));
 		request.perform(); //TODO: consider ?ids=all?
 		/* */
-		bool parsingSuccessful = reader.parse(matchDetails.str(), root);
+		bool parsingSuccessful = parser.parse(matchDetails.str(), match_data);
 		if (!parsingSuccessful)
 		{
 			cout << "Failed to parse configuration\n" 
-				<< reader.getFormattedErrorMessages();
+				<< parser.getFormattedErrorMessages();
 			exit(0);
 		}
 		/* */
 		if (!stored_matchDetails)
 		{
-			store_matchDetails(&root, con);
+			store_matchDetails(&match_data, con);
 			stored_matchDetails = true;
 		}
-		for (int i = 0; i < (int)root["maps"].size(); i++)
+		for (int i = 0; i < (int)match_data["maps"].size(); i++)
 		{
-			store_activityData(&root, i, con);
-			store_mapScores(&root, i, con);
+			store_activityData(&match_data, i, con);
+			store_mapScores(&match_data, i, con);
 		}
 }
 int main (int argc, char *argv[])
