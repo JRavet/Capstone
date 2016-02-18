@@ -82,7 +82,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	delete res;
 }
 /* */
-void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con)
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, int ingame_clock_time)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -111,8 +111,8 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 			SQLstmt += "0"; //no PPT value
 		}
 		check_guildClaim(objectives[i]["claimed_by"].asString(),con);
-		SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\"";
-		SQLstmt += ",15"; //tick_timer
+		SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\",";
+		convertNumToString(&converter,ingame_clock_time,&SQLstmt);
 		SQLstmt += ",\"" + objectives[i]["owner"].asString() + "\"";
 		SQLstmt += ",\"" + objectives[i]["claimed_at"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
@@ -211,7 +211,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	}
 }
 /* */
-void get_matchDetails(string matchID, sql::Connection *con)
+void get_matchDetails(string matchID, int region, sql::Connection *con, int ingame_clock_time)
 {
 		Easy request;
 		stringstream matchDetails;
@@ -220,7 +220,7 @@ void get_matchDetails(string matchID, sql::Connection *con)
 		/* */
 		request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 		request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches/" + matchID));
-		request.perform(); //TODO: consider ?ids=all?
+		request.perform(); //TODO: ?ids=all, filter to match_region; add for-loop and modify structures to compensate
 		/* */
 		bool parsingSuccessful = parser.parse(matchDetails.str(), match_data);
 		if (!parsingSuccessful)
@@ -237,13 +237,21 @@ void get_matchDetails(string matchID, sql::Connection *con)
 		}
 		for (int i = 0; i < (int)match_data["maps"].size(); i++)
 		{
-			store_activityData(&match_data, i, con);
-			store_mapScores(&match_data, i, con);
+			store_activityData(&match_data, i, con, ingame_clock_time);
+			if (ingame_clock_time == 14)
+			{ //only store mapscore data every point-tally in-game
+				store_mapScores(&match_data, i, con);
+			}
 		}
 }
-int main (int argc, char *argv[])
+void sync_to_ingame_clock(int region)
 {
-    try 
+	//TODO: perform match-reset-detection here? simply reset global stored_matchDetails = false
+	//TODO: synchronize here
+}
+void collect_data(int region) //1 = North American, 2 = European
+{
+	try 
     {
     	sql::mysql::MySQL_Driver *driver;
 		sql::Connection *con;
@@ -256,14 +264,22 @@ int main (int argc, char *argv[])
 		//
 		clock_t beginTime, endTime;
 		double elapsed_msecs;
+		sync_to_ingame_clock(region);
+		int ingame_clock_time = 14;
     	while (1)
 		{
 			beginTime = clock();
-			get_matchDetails("1-4", con);
+			get_matchDetails("1-4", region, con, ingame_clock_time); //TODO: parameterize to use NA/EU; using ?ids=all; remove "1-4" and "matchID" after
 			endTime = clock();
 			elapsed_msecs = double(endTime - beginTime) / CLOCKS_PER_SEC * microSec;
 			cout << elapsed_msecs << endl;
 			usleep(microSec*60 - elapsed_msecs);
+			ingame_clock_time--;
+			if (ingame_clock_time < 0)
+			{
+				sync_to_ingame_clock(region); //resync to in-game clock every cycle
+				ingame_clock_time = 14;
+			}
 		}
 		delete con;
 	}
@@ -275,5 +291,10 @@ int main (int argc, char *argv[])
 	{
 		cout << e.what() << endl;
 	}
+}
+int main (int argc, char *argv[])
+{
+	collect_data(1);
+	//TODO: multithread to collect_data(2) as well
 	return 0;
 }
