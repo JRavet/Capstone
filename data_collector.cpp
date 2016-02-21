@@ -26,7 +26,7 @@ using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
-int microSec = 1000000; //used to convert from microseconds to seconds and visa versa
+double microSec = 1000000.0; //used to convert from microseconds to seconds and visa versa
 bool stored_matchDetails = false;
 //TODO macros for connection details
 //TODO comment functions
@@ -271,7 +271,7 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 	struct tm * currentUTCTime;
 	if (resync == true)
 	{ //only do an initial-pause on a resync, to save the number of calls made to the API
-		usleep(microSec*30); //wait 30 seconds to reduce the number of API calls made
+		usleep(microSec*45); //wait 45 seconds to reduce the number of API calls made
 	}
 	while (1)
 	{	
