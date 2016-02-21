@@ -17,6 +17,7 @@
 #include "mysql_driver.h"
 //timing
 #include <ctime>
+//
 #define FIRST_SRV "green"
 #define SECOND_SRV "blue"
 #define THIRD_SRV "red"
@@ -27,6 +28,13 @@ using namespace std;
 /* */
 int microSec = 1000000; //used to convert from microseconds to seconds and visa versa
 bool stored_matchDetails = false;
+//TODO macros for connection details
+//TODO comment functions
+//TODO rename variables to be more descriptive
+//TODO verify timing mechanism with new load
+//TODO test match reset checking with spoof values
+//TODO: resolution as macro, allowing for 15/30/60 sec
+//TODO multithread
 /* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
@@ -47,8 +55,8 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	}
 	catch (sql::SQLException &e)
 	{
-		cout << e.what() << endl;
-		return;
+	//	cout << e.what() << endl;
+		return; //return from the function early
 	}
 	if (!res->next()) //if there were no matching guild ids ...
 	{
@@ -69,7 +77,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 			}
 			catch (sql::SQLException &e)
 			{
-				cout << e.what() << endl;
+			//	cout << e.what() << endl;
 			}
 		}
 	}
@@ -120,7 +128,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		}
 		catch (sql::SQLException &e)
 		{
-			cout << e.what() << endl;
+			//cout << e.what() << endl;
 		}
 		delete stmt;
 	}
@@ -154,7 +162,7 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 			}
 			catch (sql::SQLException &e)
 			{
-				cout << e.what() << endl;
+			//	cout << e.what() << endl;
 			}
 		}
 	}
@@ -207,7 +215,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	}
 	catch (sql::SQLException &e)
 	{
-		cout << e.what() << endl;
+	//	cout << e.what() << endl;
 	}
 	delete stmt;
 }
@@ -312,21 +320,24 @@ void collect_data(string region) //1 = North American, 2 = European
 		{
 			beginTime = time(0);
 			ingame_clock_time--;
+			cout << "Beginning " << ingame_clock_time << endl;
 			get_matchDetails(region, con, ingame_clock_time);
-			cout << ingame_clock_time << endl;
+			cout << "Ending " << ingame_clock_time << endl;
 			if (ingame_clock_time == 14)
 			{
 				sync_to_ingame_clock(region,true); //resync to in-game clock every cycle
 			}
 			else
-			{ //TODO: resolution as macro, allowing for 15/30/60 sec
+			{
 				if (ingame_clock_time == 0)
 				{
 					ingame_clock_time = 15;
 				}
 				endTime = time(0);
-				elapsed_msecs = difftime(endTime, beginTime) * 1000.0;
-				usleep((microSec*60 - elapsed_msecs));
+				elapsed_msecs = difftime(endTime, beginTime) * microSec;
+				cout << elapsed_msecs/microSec << " seconds elapsed" << endl;
+				cout << "Time to sleep: " << (double)(microSec*60.0 - elapsed_msecs)/microSec << endl;
+				usleep((double)(microSec*60.0 - elapsed_msecs));
 			}
 		}
 		delete con;
@@ -343,6 +354,5 @@ void collect_data(string region) //1 = North American, 2 = European
 int main (int argc, char *argv[])
 {
 	collect_data("1");
-	//TODO: multithread to collect_data(2) as well
 	return 0;
 }
