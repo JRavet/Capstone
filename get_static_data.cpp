@@ -20,6 +20,10 @@ using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
+#define IPADDR "tcp://127.0.0.1:3306"
+#define USERNAME "root"
+#define PASSWORD "egamirrorimeht"
+#define DATABASE "Gw2Analyser"
 /*
 stringstream *converter -> a stringstream pointer to perform the conversion with
 float valueToConvert	-> the number to convert; float is used to support both ints and floats
@@ -38,17 +42,18 @@ void convertNumToString(stringstream *converter, float valueToConvert, string *r
 }
 /*
 const Json::Value *objective	-> The parsed Json containing a single objective's data
-sql::Connection *con			-> The SQL connection to be used to create and execute statements
+sql::Connection *dbCon			-> The SQL connection to be used to create and execute statements
 
 This function takes a parsed Json value containing a single objective's data and
 	creates a SQLstmt string to store the data it contains.
 Extra processing is done to determine the "ppt_value" of the objective based on its type.
 */
-void store_ObjectiveData(const Json::Value *objective, sql::Connection *con)
+void store_ObjectiveData(const Json::Value *objective, sql::Connection *dbCon)
 {
-	sql::Statement *stmt;
+	sql::Statement *store_obj_stmt;
 	stringstream converter;
 	int ppt_value = 0;
+	//Depending on which type the objective is, assign a ppt_value to it accordingly
 	if ((*objective)["type"].asString() == "Camp")
 	{
 		ppt_value = 5;
@@ -65,6 +70,7 @@ void store_ObjectiveData(const Json::Value *objective, sql::Connection *con)
 	{
 		ppt_value = 35;
 	}
+	//ppt_value defaults to 0 if the objective has any other type
 	string SQLstmt = "INSERT INTO objective ";
 	SQLstmt += "VALUES(";
 	SQLstmt += "\"" + (*objective)["id"].asString() + "\"";
@@ -90,43 +96,42 @@ void store_ObjectiveData(const Json::Value *objective, sql::Connection *con)
 	//
 	try
 	{
-		stmt = con->createStatement();
-		stmt->execute(SQLstmt);
+		store_obj_stmt = dbCon->createStatement(); //create a SQL statement
+		store_obj_stmt->execute(SQLstmt); //and execute the SQL statement that was just created
 	}
 	catch (sql::SQLException & e)
 	{
 		cout << e.what() << endl;
 	}
-	delete stmt;
+	delete store_obj_stmt; //delete the statement to free memory
 }
-/* */
-void store_allObjectives(sql::Connection *con)
+/*
+sql::Connection *dbCon	-> The SQL connection to be used to create and execute statements
+
+This function obtains all objective's definitions from the API, parses the data, and passes
+	individual objective-definitions to the store_ObjectiveData function
+*/
+void store_allObjectives(sql::Connection *dbCon)
 {
 	try 
     {
 		Easy myRequest;
 		stringstream result;
 		myRequest.setOpt(cURLpp::Options::WriteStream(&result));
+		//set the results of the API call to be stored into the "result" stringstream
 		myRequest.setOpt(Url("https://api.guildwars2.com/v2/wvw/objectives?ids=all"));
+		//set the URL to be contacted to obtain data from
 		myRequest.perform();
-		/* */
-		Json::Value root;
-		Json::Reader reader;
-		bool parsingSuccessful = reader.parse(result.str(), root);
-		if (!parsingSuccessful)
-		{
-			cout << "Failed to parse configuration\n" 
-				<< reader.getFormattedErrorMessages();
-			return;
+		//performs the query to the API to gather all objective's definitions at once
+		Json::Value objectiveList; //create a Json::Value which will contain the full objective list
+		Json::Reader reader; //create a Json reader which can parse Json data
+		if (reader.parse(result.str(), objectiveList)) //parse the data from "result.str()" to the Json::Value "objectiveList"
+		{ //if the parsing was successful
+			for (int i = 0; i < (int)objectiveList.size(); i++)
+			{ //loop through all elements and store each objective
+				store_ObjectiveData(&objectiveList[i], dbCon);
+			}
 		}
-		/* */
-		int i = 0;
-		Json::Value objective;
-		for (i = 0; i < (int)root.size(); i++)
-		{
-			store_ObjectiveData(&root[i], con);
-		}
-	/* */
 	}
 	catch (RuntimeError & e)
 	{
@@ -137,9 +142,16 @@ void store_allObjectives(sql::Connection *con)
 		cout << e.what() << endl;
 	}
 }
-void store_serverInfo(const Json::Value *server, sql::Connection *con)
+/*
+const Json::Value *server	-> The parsed Json containing a single server-info's data
+sql::Connection *dbCon		-> The SQL connection to be used to create and execute statements
+
+This function takes a parsed Json value containing a single server_data's data and
+	creates a SQLstmt string to store the data it contains.
+*/
+void store_serverInfo(const Json::Value *server, sql::Connection *dbCon)
 {
-	sql::Statement *stmt;
+	sql::Statement *store_srv_stmt;
 	stringstream converter;
 	string SQLstmt = "INSERT INTO server_info ";
 	SQLstmt += "VALUES(";
@@ -149,53 +161,53 @@ void store_serverInfo(const Json::Value *server, sql::Connection *con)
 	//
 	try
 	{
-		stmt = con->createStatement();
-		stmt->execute(SQLstmt);
+		store_srv_stmt = dbCon->createStatement(); //create a SQL statement
+		store_srv_stmt->execute(SQLstmt); //and execute the SQL statement that was just created
 	}
 	catch (sql::SQLException & e)
 	{
 		cout << e.what() << endl;
 	}
-	delete stmt;
+	delete store_srv_stmt; //delete the statement to free memory
 }
-void store_allServerInfo(sql::Connection *con)
+/*
+sql::Connection *dbCon	-> The SQL connection to be used to create and execute statements
+
+This function obtains all server_data's definitions from the API, parses the data, and passes
+	individual server_data-definitions to the store_serverInfo function
+*/
+void store_allServerInfo(sql::Connection *dbCon)
 {
 	try 
     {
 		Easy myRequest;
 		stringstream result;
 		myRequest.setOpt(cURLpp::Options::WriteStream(&result));
+		//set the results of the API call to be stored into the "result" stringstream
 		myRequest.setOpt(Url("https://api.guildwars2.com/v2/worlds?ids=all"));
+		//set the URL to be contacted to obtain data from
 		myRequest.perform();
-		/* */
-		Json::Value root;
-		Json::Reader reader;
-		bool parsingSuccessful = reader.parse(result.str(), root);
-		if (!parsingSuccessful)
-		{
-			cout << "Failed to parse configuration\n" 
-				<< reader.getFormattedErrorMessages();
-			return;
+		//performs the query to the API to gather all server_data's definitions at once
+		Json::Value server_data_list; //create a Json::Value which will contain the full server_data list
+		Json::Reader reader; //create a Json reader which can parse Json data
+		if (reader.parse(result.str(), server_data_list)) //parse the data from "result.str()" to the Json::Value "server_data"
+		{ //if the parsing was successful
+			for (int i = 0; i < (int)server_data_list.size(); i++)
+			{ //loop through all elements and store each server_data
+				store_serverInfo(&server_data_list[i], dbCon);
+			}
+			sql::Statement *store_srv_stmt;
+			store_srv_stmt = dbCon->createStatement(); //create a SQL statement
+			try
+			{ //manually store a server with an id of 0 and a name of "Neutral"
+				store_srv_stmt->execute("INSERT INTO server_info VALUES(0,\"Neutral\");");
+			}
+			catch (sql::SQLException &e)
+			{
+				cout << e.what() << endl;
+			}
+			delete store_srv_stmt; //delete the statement to free memory
 		}
-		/* */
-		int i = 0;
-		Json::Value objective;
-		for (i = 0; i < (int)root.size(); i++)
-		{
-			store_serverInfo(&root[i], con);
-		}
-		sql::Statement *stmt;
-		stmt = con->createStatement();
-		try
-		{
-			stmt->execute("INSERT INTO server_info VALUES(0,\"Neutral\");");
-		}
-		catch (sql::SQLException &e)
-		{
-			cout << e.what() << endl;
-		}
-		delete stmt;
-	/* */
 	}
 	catch (RuntimeError & e)
 	{
@@ -206,33 +218,35 @@ void store_allServerInfo(sql::Connection *con)
 		cout << e.what() << endl;
 	}
 }
+/*
+	This function creates and establishes a connection to the mySQL database
+		and calls store_allOBjectives and store_allServerInfo
+*/
 int main (int argc, char *argv[])
 {
     try 
     {
-		sql::mysql::MySQL_Driver *driver;
-		sql::Connection *con;
-		sql::Statement *stmt;
+		sql::mysql::MySQL_Driver *dbDriver; //create a mySQL driver to establish a connection
+		sql::Connection *dbCon; //create a connection to execute statements
+		sql::Statement *con_to_db_stmt; //create a statement
 		try
 		{
-			driver = sql::mysql::get_mysql_driver_instance();
-			con = driver->connect("tcp://127.0.0.1:3306", "root", "egamirrorimeht");
-			stmt = con->createStatement();
-			stmt->execute("USE Gw2Analyser");
+			dbDriver = sql::mysql::get_mysql_driver_instance(); //initialize the driver
+			dbCon = dbDriver->connect(IPADDR, USERNAME, PASSWORD); //connect to the database
+			con_to_db_stmt = dbCon->createStatement(); //initialize the statement
+			con_to_db_stmt->execute("USE " DATABASE); //and execute a statement to use the selected DB
 		}
 		catch (sql::SQLException &e)
 		{
 			cout << e.what() << endl;
-			return 1;
+			return 1; //exit early if a connection to the database cannot be established
 		}
-		store_allObjectives(con);
-		store_allServerInfo(con);
-		delete stmt;
-		delete con;
 		/* */
-	/*
-	----------------------------------------------------------
-	*/
+		store_allObjectives(dbCon);
+		store_allServerInfo(dbCon);
+		/* */
+		delete con_to_db_stmt; //delete the statement to free memory
+		delete dbCon; //delete the connection object to free memory
 	}
 	catch (RuntimeError & e)
 	{
