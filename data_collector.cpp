@@ -23,6 +23,11 @@
 #define THIRD_SRV "red"
 #define TIME_RES 60
 #define MICROSEC 1000000.0
+//
+#define IPADDR "tcp://127.0.0.1:3306"
+#define USERNAME "root"
+#define PASSWORD "egamirrorimeht"
+#define DATABASE "Gw2Analyser"
 /* */
 using namespace cURLpp;
 using namespace Options;
@@ -153,7 +158,7 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 			convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
 			SQLstmt += ",";
 			convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-			SQLstmt += ");";
+			SQLstmt += ",\"\",\"\",\"\");"; //TODO 3 populations
 			//
 			try
 			{
@@ -267,8 +272,8 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 		//share the same in-game clock
 	request.setOpt(Url(match_url));
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
-	time_t currentTime;
-	struct tm * currentUTCTime;
+	//time_t currentTime;
+	//struct tm * currentUTCTime;
 	if (resync == true)
 	{ //only do an initial-pause on a resync, to save the number of calls made to the API
 		usleep(MICROSEC*0.75*TIME_RES); //wait 45 seconds to reduce the number of API calls made
@@ -280,8 +285,8 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 		if (parser.parse(matchDetails.str(), score_data))
 		{
 			cout << "Syncing ..." << endl;
-			currentTime = time(NULL); //get current local time
-    		currentUTCTime = gmtime( &currentTime ); //convert current time to UTC
+			//currentTime = time(NULL); //get current local time
+    		//currentUTCTime = gmtime( &currentTime ); //convert current time to UTC
 			//TODO
 			//if previous_start_time != new_start_time
 				//stored_matchDetails = false;
@@ -307,9 +312,9 @@ void collect_data(string region) //1 = North American, 2 = European
 		sql::Connection *con;
 		sql::Statement *stmt;
 		driver = sql::mysql::get_mysql_driver_instance();
-		con = driver->connect("tcp://127.0.0.1:3306", "root", "egamirrorimeht");
+		con = driver->connect(IPADDR, USERNAME, PASSWORD);
 		stmt = con->createStatement();
-		stmt->execute("USE Gw2Analyser");
+		stmt->execute("USE " DATABASE);
 		delete stmt;
 		//
 		time_t beginTime, endTime;
