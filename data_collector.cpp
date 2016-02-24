@@ -21,19 +21,19 @@
 #define FIRST_SRV "green"
 #define SECOND_SRV "blue"
 #define THIRD_SRV "red"
+#define TIME_RES 60
+#define MICROSEC 1000000.0
 /* */
 using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
-double microSec = 1000000.0; //used to convert from microseconds to seconds and visa versa
 bool stored_matchDetails = false;
+bool connected = true;
 //TODO macros for connection details
 //TODO comment functions
 //TODO rename variables to be more descriptive
-//TODO verify timing mechanism with new load
 //TODO test match reset checking with spoof values
-//TODO: resolution as macro, allowing for 15/30/60 sec
 //TODO multithread
 /* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
@@ -66,7 +66,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 		Json::Reader reader;
 		/* */
 		request.setOpt(cURLpp::Options::WriteStream(&guildDetails));
-		request.setOpt(Url("https://api.guildwars2.com/v1/guild_details.json?guild_id=" + guildID));
+		request.setOpt(Url("https://api.guildwars2.com/v1/guild_details.json?guild_id=" + guildID));		
 		request.perform();
 		/* */
 		if (reader.parse(guildDetails.str(), guild_data))
@@ -271,7 +271,7 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 	struct tm * currentUTCTime;
 	if (resync == true)
 	{ //only do an initial-pause on a resync, to save the number of calls made to the API
-		usleep(microSec*45); //wait 45 seconds to reduce the number of API calls made
+		usleep(MICROSEC*0.75*TIME_RES); //wait 45 seconds to reduce the number of API calls made
 	}
 	while (1)
 	{	
@@ -295,7 +295,7 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 		}
 		matchDetails.str("");
 		matchDetails.clear();
-		usleep(microSec*5); //sleep for 5 seconds
+		usleep(MICROSEC*0.0833*TIME_RES); //sleep for 5 seconds
 	}
 	/* */
 }
@@ -319,26 +319,23 @@ void collect_data(string region) //1 = North American, 2 = European
     	while (1)
 		{
 			beginTime = time(0);
-			ingame_clock_time--;
 			cout << "Beginning " << ingame_clock_time << endl;
 			get_matchDetails(region, con, ingame_clock_time);
 			cout << "Ending " << ingame_clock_time << endl;
+			ingame_clock_time--;
+			endTime = time(0);
 			if (ingame_clock_time == 14)
 			{
 				sync_to_ingame_clock(region,true); //resync to in-game clock every cycle
 			}
-			else
+			else if (ingame_clock_time == 0)
 			{
-				if (ingame_clock_time == 0)
-				{
-					ingame_clock_time = 15;
-				}
-				endTime = time(0);
-				elapsed_msecs = difftime(endTime, beginTime) * microSec;
-				cout << elapsed_msecs/microSec << " seconds elapsed" << endl;
-				cout << "Time to sleep: " << (double)(microSec*60.0 - elapsed_msecs)/microSec << endl;
-				usleep((double)(microSec*60.0 - elapsed_msecs));
+				ingame_clock_time = 15;
 			}
+			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
+			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
+			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
+			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs));
 		}
 		delete con;
 	}
