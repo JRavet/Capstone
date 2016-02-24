@@ -41,12 +41,79 @@ void convertNumToString(stringstream *converter, float valueToConvert, string *r
 	converter->clear();
 }
 /*
+string objective_name	-> The name of the objective to use to determine the compass direction
+string *SQLstmt 		-> The SQLstmt string to append the compass direction to
+
+This function determines an objective's compass_direction based on its name
+It is currently hard-coded, but may be converted to an algorithm based on an objective's coordinates later
+*/
+void get_compassDirection(string objective_name, string *SQLstmt)
+{
+	if (objective_name.find("Necropolis") != string::npos)
+	{
+		(*SQLstmt) += ",\"NE\"";
+	}
+	else if (objective_name.find("'s Refuge") != string::npos)
+	{
+		(*SQLstmt) += ",\"NE\"";
+	}
+	else if (objective_name.find("Palace") != string::npos)
+	{
+		(*SQLstmt) += ",\"E\"";
+	}
+	else if (objective_name.find("Farmstead") != string::npos)
+	{
+		(*SQLstmt) += ",\"SE\"";
+	}
+	else if (objective_name.find("Depot") != string::npos)
+	{
+		(*SQLstmt) += ",\"SE\"";
+	}
+	else if (objective_name.find("Well") != string::npos)
+	{
+		(*SQLstmt) += ",\"S\"";
+	}
+	else if (objective_name.find("Outpost") != string::npos)
+	{
+		(*SQLstmt) += ",\"SW\"";
+	}
+	else if (objective_name.find("Encampment") != string::npos)
+	{
+		(*SQLstmt) += ",\"SW\"";
+	}
+	else if (objective_name.find("Undercroft") != string::npos)
+	{
+		(*SQLstmt) += ",\"W\"";
+	}
+	else if (objective_name.find("Hideaway") != string::npos)
+	{
+		(*SQLstmt) += ",\"NW\"";
+	}
+	else if (objective_name.find("Academy") != string::npos)
+	{
+		(*SQLstmt) += ",\"NW\"";
+	}
+	else if (objective_name.find("Lab") != string::npos)
+	{
+		(*SQLstmt) += ",\"N\"";
+	}
+	else if (objective_name.find("Rampart") != string::npos)
+	{
+		(*SQLstmt) += ",\"N\"";
+	}
+	else
+	{
+		(*SQLstmt) += ",\"\"";
+	}
+}
+/*
 const Json::Value *objective	-> The parsed Json containing a single objective's data
 sql::Connection *dbCon			-> The SQL connection to be used to create and execute statements
 
 This function takes a parsed Json value containing a single objective's data and
 	creates a SQLstmt string to store the data it contains.
-Extra processing is done to determine the "ppt_value" of the objective based on its type.
+Extra processing is done to determine the "ppt_value" of the objective based on its type,
+	as well as it's compass-direction (only for objectives on a borderland map).
 */
 void store_ObjectiveData(const Json::Value *objective, sql::Connection *dbCon)
 {
@@ -92,6 +159,7 @@ void store_ObjectiveData(const Json::Value *objective, sql::Connection *dbCon)
 	SQLstmt += ",";
 	convertNumToString(&converter,((*objective)["label_coord"][1].asFloat()),&SQLstmt);
 	SQLstmt += ",\"" + (*objective)["marker"].asString() + "\"";
+	get_compassDirection(((*objective)["name"].asString()),&SQLstmt);
 	SQLstmt += ");";
 	//
 	try
@@ -115,13 +183,13 @@ void store_allObjectives(sql::Connection *dbCon)
 {
 	try 
     {
-		Easy myRequest;
+		Easy request_obj_data;
 		stringstream result;
-		myRequest.setOpt(cURLpp::Options::WriteStream(&result));
+		request_obj_data.setOpt(cURLpp::Options::WriteStream(&result));
 		//set the results of the API call to be stored into the "result" stringstream
-		myRequest.setOpt(Url("https://api.guildwars2.com/v2/wvw/objectives?ids=all"));
+		request_obj_data.setOpt(Url("https://api.guildwars2.com/v2/wvw/objectives?ids=all"));
 		//set the URL to be contacted to obtain data from
-		myRequest.perform();
+		request_obj_data.perform();
 		//performs the query to the API to gather all objective's definitions at once
 		Json::Value objectiveList; //create a Json::Value which will contain the full objective list
 		Json::Reader reader; //create a Json reader which can parse Json data
@@ -180,13 +248,13 @@ void store_allServerInfo(sql::Connection *dbCon)
 {
 	try 
     {
-		Easy myRequest;
+		Easy request_srv_data;
 		stringstream result;
-		myRequest.setOpt(cURLpp::Options::WriteStream(&result));
+		request_srv_data.setOpt(cURLpp::Options::WriteStream(&result));
 		//set the results of the API call to be stored into the "result" stringstream
-		myRequest.setOpt(Url("https://api.guildwars2.com/v2/worlds?ids=all"));
+		request_srv_data.setOpt(Url("https://api.guildwars2.com/v2/worlds?ids=all"));
 		//set the URL to be contacted to obtain data from
-		myRequest.perform();
+		request_srv_data.perform();
 		//performs the query to the API to gather all server_data's definitions at once
 		Json::Value server_data_list; //create a Json::Value which will contain the full server_data list
 		Json::Reader reader; //create a Json reader which can parse Json data
