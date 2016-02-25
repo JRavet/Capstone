@@ -35,11 +35,12 @@ using namespace std;
 /* */
 bool stored_matchDetails = false;
 bool connected = true;
-//TODO macros for connection details
 //TODO comment functions
 //TODO rename variables to be more descriptive
 //TODO test match reset checking with spoof values
 //TODO multithread
+//TODO calc weeknum
+//TODO calc tick_timer backwards from current
 /* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
@@ -90,7 +91,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	delete res;
 }
 /* */
-void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, int ingame_clock_time)
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -225,7 +226,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	delete stmt;
 }
 /* */
-void get_matchDetails(string region, sql::Connection *con, int ingame_clock_time)
+void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time)
 { //region: 1 = NA, 2 = EU
 	Easy request;
 	stringstream matchDetails;
@@ -319,25 +320,33 @@ void collect_data(string region) //1 = North American, 2 = European
 		//
 		time_t beginTime, endTime;
 		double elapsed_msecs;
-		int ingame_clock_time = 14;
+		double ingame_clock_time = 14.0*60.0;
 		sync_to_ingame_clock(region,false);
     	while (1)
 		{
 			beginTime = time(0);
-			cout << "Beginning " << ingame_clock_time << endl;
-			get_matchDetails(region, con, ingame_clock_time);
-			cout << "Ending " << ingame_clock_time << endl;
-			ingame_clock_time--;
+			cout << "Beginning " << ingame_clock_time/60.0 << endl;
+			get_matchDetails(region, con, ingame_clock_time/60.0);
+			cout << "Ending " << ingame_clock_time/60.0 << endl;
 			endTime = time(0);
-			if (ingame_clock_time == 14)
+			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
+			if (ingame_clock_time/TIME_RES == 15)
 			{
 				sync_to_ingame_clock(region,true); //resync to in-game clock every cycle
+				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
-			else if (ingame_clock_time == 0)
+			else if (ingame_clock_time/TIME_RES <= 1)
 			{
-				ingame_clock_time = 15;
+				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtravted later
 			}
-			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
+			ingame_clock_time -= TIME_RES;
+			if (elapsed_msecs/MICROSEC > TIME_RES)
+			{
+				cout << "Too much time elapsed! Resyncing" << endl;
+				elapsed_msecs = TIME_RES*MICROSEC-1;
+				ingame_clock_time = 14;
+				sync_to_ingame_clock(region,false);
+			}
 			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
 			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
 			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs));
