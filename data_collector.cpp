@@ -21,8 +21,8 @@
 #define FIRST_SRV "green"
 #define SECOND_SRV "blue"
 #define THIRD_SRV "red"
-#define TIME_RES 60
-#define MICROSEC 1000000.0
+#define TIME_RES 60 //in seconds; standard is 60 seconds
+#define MICROSEC 1000000.0 //the amount of microseconds in a second
 //
 #define IPADDR "tcp://127.0.0.1:3306"
 #define USERNAME "root"
@@ -34,13 +34,14 @@ using namespace Options;
 using namespace std;
 /* */
 bool stored_matchDetails = false;
-bool connected = true;
+bool connected = true; //TODO for the database connection
 //TODO comment functions
 //TODO rename variables to be more descriptive
 //TODO test match reset checking with spoof values
 //TODO multithread
 //TODO calc weeknum
 //TODO calc tick_timer backwards from current
+//TODO grn/blu/red_srv_populations in storing match_details
 /* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
@@ -344,7 +345,7 @@ void collect_data(string region) //1 = North American, 2 = European
 			{
 				cout << "Too much time elapsed! Resyncing" << endl;
 				elapsed_msecs = TIME_RES*MICROSEC-1;
-				ingame_clock_time = 14;
+				ingame_clock_time = 14*60.0;
 				sync_to_ingame_clock(region,false);
 			}
 			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
