@@ -175,6 +175,47 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 	}
 	delete stmt;
 }
+void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, stringstream *converter, sql::Connection *con)
+{
+	sql::Statement *stmt;
+	sql::ResultSet *res; //TODO look at optimizing this loop; it queries the DB a lot
+	stmt = con->createStatement();
+	int green_ppt = 0, blue_ppt = 0, red_ppt = 0;
+	for (int i = 0; i < (int)(*match_data)["maps"][mapNum]["objectives"].size(); i++)
+	{
+		try
+		{
+			res = stmt->executeQuery("SELECT ppt_value FROM objective WHERE obj_id = \"" + (*match_data)["maps"][mapNum]["objectives"][i]["id"].asString() + "\";");
+			res->next();
+
+			if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Green")
+			{
+				green_ppt += res->getInt("ppt_value");
+			}
+			else if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Blue")
+			{
+				blue_ppt += res->getInt("ppt_value");
+			}
+			else if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Red")
+			{
+				red_ppt += res->getInt("ppt_value");
+			}
+		}
+		catch (sql::SQLException &e)
+		{
+			cout << e.what() << endl;	
+		}
+	}
+	cout << (*match_data)["id"].asString() << " " <<  red_ppt << " " <<  blue_ppt << " " <<  green_ppt  << endl;
+	(*SQLstmt) += ",";
+	convertNumToString(converter,green_ppt,SQLstmt);
+	(*SQLstmt) += ",";
+	convertNumToString(converter,blue_ppt,SQLstmt);
+	(*SQLstmt) += ",";
+	convertNumToString(converter,red_ppt,SQLstmt);
+	delete stmt;
+	delete res;
+}
 /* */
 void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con)
 {
@@ -214,6 +255,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][SECOND_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
     convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][THIRD_SRV].asInt()),&SQLstmt);
+    get_server_ppt(match_data, mapNum, &SQLstmt, &converter, con);
     SQLstmt += ");";
     try
 	{
@@ -252,7 +294,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 				for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
 				{
 					store_activityData(&all_match_data[j], i, con, ingame_clock_time);
-					if (ingame_clock_time == 13)
+					if (ingame_clock_time == 14)
 					{ //only store mapscore data every point-tally in-game
 						store_mapScores(&all_match_data[j], i, con);
 					}
