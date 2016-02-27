@@ -35,6 +35,7 @@ using namespace std;
 /* */
 bool stored_matchDetails = false;
 bool connected = true; //TODO for the database connection
+bool force_resync = false;
 //TODO comment functions
 //TODO rename variables to be more descriptive
 //TODO test match reset checking with spoof values
@@ -74,18 +75,26 @@ void check_guildClaim(string guildID, sql::Connection *con)
 		/* */
 		request.setOpt(cURLpp::Options::WriteStream(&guildDetails));
 		request.setOpt(Url("https://api.guildwars2.com/v1/guild_details.json?guild_id=" + guildID));		
-		request.perform();
-		/* */
-		if (reader.parse(guildDetails.str(), guild_data))
+		try
 		{
-			try
+			request.perform();
+			/* */
+			if (reader.parse(guildDetails.str(), guild_data))
 			{
-				stmt->execute("INSERT INTO guild VALUES(\"" + guildID + "\",\"" + guild_data["guild_name"].asString() + "\",\"" + guild_data["tag"].asString() + "\");");
+				try
+				{
+					stmt->execute("INSERT INTO guild VALUES(\"" + guildID + "\",\"" + guild_data["guild_name"].asString() + "\",\"" + guild_data["tag"].asString() + "\");");
+				}
+				catch (sql::SQLException &e)
+				{
+				//	cout << e.what() << endl;
+				}
 			}
-			catch (sql::SQLException &e)
-			{
-			//	cout << e.what() << endl;
-			}
+		}
+		catch (exception &e)
+		{
+			force_resync = true;
+			cout << e.what() << endl;
 		}
 	}
 	delete stmt;
@@ -174,7 +183,7 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 			}
 			catch (sql::SQLException &e)
 			{
-			//	cout << e.what() << endl;
+				cout << e.what() << endl;
 			}
 		}
 	}
@@ -268,7 +277,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     	start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
     	start_time.erase(19,1); // ^^
 		res = stmt->executeQuery("SELECT max(timeStamp), greenKills, blueKills, redKills, greenDeaths, blueDeaths, redDeaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\";");
-		if (res->next())
+		if (res->next()) //TODO max(timeStamp) still giving previous timestamp data?
 		{
 			append_server_stats(res->getString(FIRST_SRV"Kills"),&SQLstmt);
 			SQLstmt += ",";
@@ -333,29 +342,37 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 	/* */
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 	request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches?ids=all"));
-	request.perform();
-	/* */
-	if (parser.parse(matchDetails.str(), all_match_data))
+	try
 	{
-		if (!stored_matchDetails)
+		request.perform();
+		/* */
+		if (parser.parse(matchDetails.str(), all_match_data))
 		{
-			store_matchDetails(&all_match_data, region, con);
-			stored_matchDetails = true;
-		}
-		for (int j = 0; j < (int)all_match_data.size(); j++)
-		{
-			if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
+			if (!stored_matchDetails)
 			{
-				for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
+				store_matchDetails(&all_match_data, region, con);
+				stored_matchDetails = true;
+			}
+			for (int j = 0; j < (int)all_match_data.size(); j++)
+			{
+				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
 				{
-					store_activityData(&all_match_data[j], i, con, ingame_clock_time);
-					if (ingame_clock_time == 14)
-					{ //only store mapscore data every point-tally in-game
-						store_mapScores(&all_match_data[j], i, con);
+					for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
+					{
+						store_activityData(&all_match_data[j], i, con, ingame_clock_time);
+						if (ingame_clock_time == 14)
+						{ //only store mapscore data every point-tally in-game
+							store_mapScores(&all_match_data[j], i, con);
+						}
 					}
 				}
 			}
 		}
+	}
+	catch (exception &e)
+	{
+		force_resync = true;
+		cout << e.what() << endl;
 	}
 }
 void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
@@ -365,6 +382,7 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 	Json::Value score_data;
 	Json::Reader parser;
 	int previousScore = 9999999, currentScore = 0; //initialize to very high value
+	string previousStartTime = "";
 	/* */
 	string match_url = "https://api.guildwars2.com/v2/wvw/matches/" + region + "-1";
 	//obtain the first match from the specified region. An entire region's matches
@@ -375,26 +393,36 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 	{ //only do an initial-pause on a resync, to save the number of calls made to the API
 		usleep(MICROSEC*0.75*TIME_RES); //wait 45 seconds to reduce the number of API calls made
 	}
+	bool firstLoop = false; //required to properly check for a match reset
 	while (1)
-	{	
-		request.perform();
-		/* */
-		if (parser.parse(matchDetails.str(), score_data))
+	{
+		try
 		{
-			cout << "Syncing ..." << endl;
-			//TODO
-			//if previous_start_time != new_start_time
-				//stored_matchDetails = false;
-			currentScore = score_data["scores"][FIRST_SRV].asInt() + score_data["scores"][SECOND_SRV].asInt() + score_data["scores"][THIRD_SRV].asInt();
-			if (currentScore >= (previousScore+635))
+			request.perform();
+			if (parser.parse(matchDetails.str(), score_data))
 			{
-				break;
+				cout << "Syncing ..." << endl;
+				if (stored_matchDetails && score_data["start_time"].asString() != previousStartTime && firstLoop)
+				{ //TODO test this
+					stored_matchDetails = false;
+				}
+				currentScore = score_data["scores"][FIRST_SRV].asInt() + score_data["scores"][SECOND_SRV].asInt() + score_data["scores"][THIRD_SRV].asInt();
+				if (currentScore >= (previousScore+635))
+				{
+					break;
+				}
+				previousScore = currentScore;
+				previousStartTime = score_data["start_time"].asString();
+				firstLoop = true; //one iteration of the loop has passed, so match_reset can now be detected
 			}
-			previousScore = currentScore;
-
+			matchDetails.str("");
+			matchDetails.clear();
 		}
-		matchDetails.str("");
-		matchDetails.clear();
+		catch (exception &e)
+		{
+			cout << e.what() << endl;
+		}
+		/* */
 		usleep(MICROSEC*0.0833*TIME_RES); //sleep for 5 seconds
 	}
 	/* */
@@ -434,12 +462,13 @@ void collect_data(string region) //1 = North American, 2 = European
 				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtracted later
 			}
 			ingame_clock_time -= TIME_RES;
-			if (elapsed_msecs/MICROSEC > TIME_RES)
+			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
 			{
 				cout << "Too much time elapsed! Resyncing" << endl;
 				elapsed_msecs = TIME_RES*MICROSEC-1;
 				ingame_clock_time = 14*60.0;
 				sync_to_ingame_clock(region,false);
+				force_resync = false;
 			}
 			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
 			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
