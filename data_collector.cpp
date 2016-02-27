@@ -36,6 +36,7 @@ using namespace std;
 bool stored_matchDetails = false;
 bool connected = true; //TODO for the database connection
 bool force_resync = false;
+string previous_start_time = "";
 //TODO comment functions
 //TODO rename variables to be more descriptive
 //TODO test match reset checking with spoof values
@@ -276,7 +277,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     	string start_time = (*match_data)["start_time"].asString();
     	start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
     	start_time.erase(19,1); // ^^
-		res = stmt->executeQuery("SELECT max(timeStamp), greenKills, blueKills, redKills, greenDeaths, blueDeaths, redDeaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\";");
+		res = stmt->executeQuery("SELECT max(timeStamp), "FIRST_SRV"Kills, "SECOND_SRV"Kills, "THIRD_SRV"Kills, "FIRST_SRV"Deaths, "SECOND_SRV"Deaths, "THIRD_SRV"Deaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\";");
 		if (res->next()) //TODO max(timeStamp) still giving previous timestamp data?
 		{
 			append_server_stats(res->getString(FIRST_SRV"Kills"),&SQLstmt);
@@ -351,6 +352,14 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 			if (!stored_matchDetails)
 			{
 				store_matchDetails(&all_match_data, region, con);
+				for (int k = 0; k < (int)all_match_data.size(); k++)
+				{
+					if ((all_match_data[k]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
+					{
+						previous_start_time = (all_match_data[k]["start_time"].asString());
+						break;
+					}
+				}
 				stored_matchDetails = true;
 			}
 			for (int j = 0; j < (int)all_match_data.size(); j++)
@@ -382,7 +391,6 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 	Json::Value score_data;
 	Json::Reader parser;
 	int previousScore = 9999999, currentScore = 0; //initialize to very high value
-	string previousStartTime = "";
 	/* */
 	string match_url = "https://api.guildwars2.com/v2/wvw/matches/" + region + "-1";
 	//obtain the first match from the specified region. An entire region's matches
@@ -393,7 +401,6 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 	{ //only do an initial-pause on a resync, to save the number of calls made to the API
 		usleep(MICROSEC*0.75*TIME_RES); //wait 45 seconds to reduce the number of API calls made
 	}
-	bool firstLoop = false; //required to properly check for a match reset
 	while (1)
 	{
 		try
@@ -402,8 +409,9 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 			if (parser.parse(matchDetails.str(), score_data))
 			{
 				cout << "Syncing ..." << endl;
-				if (stored_matchDetails && score_data["start_time"].asString() != previousStartTime && firstLoop)
-				{ //TODO test this
+				if (stored_matchDetails && score_data["start_time"].asString() != previous_start_time)
+				{
+					cout << "NEW MATCH!" << endl;
 					stored_matchDetails = false;
 				}
 				currentScore = score_data["scores"][FIRST_SRV].asInt() + score_data["scores"][SECOND_SRV].asInt() + score_data["scores"][THIRD_SRV].asInt();
@@ -412,8 +420,6 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 					break;
 				}
 				previousScore = currentScore;
-				previousStartTime = score_data["start_time"].asString();
-				firstLoop = true; //one iteration of the loop has passed, so match_reset can now be detected
 			}
 			matchDetails.str("");
 			matchDetails.clear();
