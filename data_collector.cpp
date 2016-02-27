@@ -204,6 +204,7 @@ void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, 
 			{
 				red_ppt += res->getInt("ppt_value");
 			}
+			delete res;
 		}
 		catch (sql::SQLException &e)
 		{
@@ -217,7 +218,6 @@ void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, 
 	(*SQLstmt) += ",";
 	convertNumToString(converter,red_ppt,SQLstmt);
 	delete stmt;
-	delete res;
 }
 /* */
 void append_server_stats(string data, string *SQLstmt)
@@ -232,7 +232,6 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 {
 	stringstream converter;
 	sql::Statement *stmt;
-	sql::ResultSet *res;
 	stmt = con->createStatement();
 	bool errorCorrected = false;
 	time_t t = time(NULL); //get current local time
@@ -264,11 +263,12 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     && ((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt()) == 0
     && ((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt()) == 0)
     { /* Error correction for API-issues */
+    	sql::ResultSet *res;
     	string start_time = (*match_data)["start_time"].asString();
     	start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
     	start_time.erase(19,1); // ^^
 		res = stmt->executeQuery("SELECT max(timeStamp), greenKills, blueKills, redKills, greenDeaths, blueDeaths, redDeaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\";");
-		while (res->next())
+		if (res->next())
 		{
 			append_server_stats(res->getString(FIRST_SRV"Kills"),&SQLstmt);
 			SQLstmt += ",";
@@ -281,6 +281,10 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 			append_server_stats(res->getString(SECOND_SRV"Deaths"),&SQLstmt);
 			SQLstmt += ",";
 			append_server_stats(res->getString(THIRD_SRV"Deaths"),&SQLstmt);
+		}
+		else
+		{
+			SQLstmt += "0,0,0,0,0,0";
 		}
 		errorCorrected = true;
 		delete res;
@@ -367,8 +371,6 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 		//share the same in-game clock
 	request.setOpt(Url(match_url));
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
-	//time_t currentTime;
-	//struct tm * currentUTCTime;
 	if (resync == true)
 	{ //only do an initial-pause on a resync, to save the number of calls made to the API
 		usleep(MICROSEC*0.75*TIME_RES); //wait 45 seconds to reduce the number of API calls made
@@ -380,8 +382,6 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 		if (parser.parse(matchDetails.str(), score_data))
 		{
 			cout << "Syncing ..." << endl;
-			//currentTime = time(NULL); //get current local time
-    		//currentUTCTime = gmtime( &currentTime ); //convert current time to UTC
 			//TODO
 			//if previous_start_time != new_start_time
 				//stored_matchDetails = false;
@@ -431,7 +431,7 @@ void collect_data(string region) //1 = North American, 2 = European
 			}
 			else if (ingame_clock_time/TIME_RES <= 1)
 			{
-				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtravted later
+				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtracted later
 			}
 			ingame_clock_time -= TIME_RES;
 			if (elapsed_msecs/MICROSEC > TIME_RES)
