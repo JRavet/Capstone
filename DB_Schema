@@ -71,6 +71,7 @@ CREATE TABLE map_scores
  green_ppt int(3),
  blue_ppt int(3),
  red_ppt int(3),
+ error_corrected boolean,
  PRIMARY KEY(timeStamp,match_id,start_time,map_id),
  FOREIGN KEY(match_id,start_time) references match_details(match_id,start_time)
  ON DELETE CASCADE

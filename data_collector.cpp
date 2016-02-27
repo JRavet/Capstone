@@ -120,6 +120,11 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		{
 			SQLstmt += "0"; //no PPT value
 		}
+		//TODO: time_owned / claimed
+		/*
+			if this.key != max(last_flipped).key
+			select max(last_flipped) from activity_data where match_id = "1-4" and obj_id = "38-2";
+		*/
 		check_guildClaim(objectives[i]["claimed_by"].asString(),con);
 		SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\",";
 		convertNumToString(&converter,ingame_clock_time,&SQLstmt);
@@ -187,7 +192,6 @@ void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, 
 		{
 			res = stmt->executeQuery("SELECT ppt_value FROM objective WHERE obj_id = \"" + (*match_data)["maps"][mapNum]["objectives"][i]["id"].asString() + "\";");
 			res->next();
-
 			if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Green")
 			{
 				green_ppt += res->getInt("ppt_value");
@@ -206,7 +210,6 @@ void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, 
 			cout << e.what() << endl;	
 		}
 	}
-	cout << (*match_data)["id"].asString() << " " <<  red_ppt << " " <<  blue_ppt << " " <<  green_ppt  << endl;
 	(*SQLstmt) += ",";
 	convertNumToString(converter,green_ppt,SQLstmt);
 	(*SQLstmt) += ",";
@@ -217,12 +220,24 @@ void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, 
 	delete res;
 }
 /* */
+void append_server_stats(string data, string *SQLstmt)
+{
+	if (data == "")
+	{
+		data = "0";
+	}
+	(*SQLstmt) += data;
+}
 void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con)
 {
 	stringstream converter;
 	sql::Statement *stmt;
+	sql::ResultSet *res;
+	stmt = con->createStatement();
+	bool errorCorrected = false;
 	time_t t = time(NULL); //get current local time
     struct tm * UTCTime = gmtime( & t ); //convert current time to UTC
+    //
     string SQLstmt = "INSERT INTO map_scores VALUES(\"";
     convertNumToString(&converter,((*UTCTime).tm_year + 1900),&SQLstmt);
     SQLstmt += "-";
@@ -244,27 +259,63 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     SQLstmt += ",";
     convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][THIRD_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][FIRST_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][SECOND_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][THIRD_SRV].asInt()),&SQLstmt);
+    //
+    if (((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt()) == 0
+    && ((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt()) == 0
+    && ((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt()) == 0)
+    { /* Error correction for API-issues */
+    	string start_time = (*match_data)["start_time"].asString();
+    	start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
+    	start_time.erase(19,1); // ^^
+		res = stmt->executeQuery("SELECT max(timeStamp), greenKills, blueKills, redKills, greenDeaths, blueDeaths, redDeaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\";");
+		while (res->next())
+		{
+			append_server_stats(res->getString(FIRST_SRV"Kills"),&SQLstmt);
+			SQLstmt += ",";
+			append_server_stats(res->getString(SECOND_SRV"Kills"),&SQLstmt);
+			SQLstmt += ",";
+			append_server_stats(res->getString(THIRD_SRV"Kills"),&SQLstmt);
+			SQLstmt += ",";
+			append_server_stats(res->getString(FIRST_SRV"Deaths"),&SQLstmt);
+			SQLstmt += ",";
+			append_server_stats(res->getString(SECOND_SRV"Deaths"),&SQLstmt);
+			SQLstmt += ",";
+			append_server_stats(res->getString(THIRD_SRV"Deaths"),&SQLstmt);
+		}
+		errorCorrected = true;
+		delete res;
+    }
+    else
+    {
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][FIRST_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][SECOND_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["deaths"][THIRD_SRV].asInt()),&SQLstmt);
+    }
     get_server_ppt(match_data, mapNum, &SQLstmt, &converter, con);
+	if (errorCorrected == true)
+    {
+   		SQLstmt += ",1";
+    }
+    else
+    {
+    	SQLstmt += ",0";
+    }
     SQLstmt += ");";
     try
 	{
-		stmt = con->createStatement();
 		stmt->execute(SQLstmt);
 	}
 	catch (sql::SQLException &e)
 	{
-	//	cout << e.what() << endl;
+		cout << e.what() << endl;
 	}
 	delete stmt;
 }
