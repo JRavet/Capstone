@@ -175,10 +175,43 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 		request.perform();
 		/* */
 		if (parser.parse(result.str(), server_populations))
-		{
-			(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
-			(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
-			(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
+		{ //TODO not the prettiest; refine later
+			if (server_populations[0]["id"].asInt() == grn_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
+			}
+			else if (server_populations[1]["id"].asInt() == grn_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
+			}
+			else if (server_populations[2]["id"].asInt() == grn_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
+			}
+			if (server_populations[0]["id"].asInt() == blu_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
+			}
+			else if (server_populations[1]["id"].asInt() == blu_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
+			}
+			else if (server_populations[2]["id"].asInt() == blu_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
+			}
+			if (server_populations[0]["id"].asInt() == red_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
+			}
+			else if (server_populations[1]["id"].asInt() == red_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
+			}
+			else if (server_populations[2]["id"].asInt() == red_srv)
+			{
+				(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
+			}
 		}
 	}
 	catch (exception &e)
