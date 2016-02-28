@@ -39,7 +39,6 @@ bool force_resync = false;
 string previous_start_time = "";
 //TODO comment functions
 //TODO rename variables to be more descriptive
-//TODO test match reset checking with spoof values
 //TODO multithread
 //TODO calc weeknum
 //TODO calc tick_timer backwards from current
@@ -156,6 +155,39 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 	}
 }
 /* */
+void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLstmt)
+{
+	Easy request;
+	stringstream result;
+	Json::Value server_populations;
+	Json::Reader parser;
+	/* */
+	request.setOpt(cURLpp::Options::WriteStream(&result));
+	string requestURL = "https://api.guildwars2.com/v2/worlds?ids=";
+	convertNumToString(&result,grn_srv,&requestURL);
+	requestURL += ",";
+	convertNumToString(&result,blu_srv,&requestURL);
+	requestURL += ",";
+	convertNumToString(&result,red_srv,&requestURL);
+	request.setOpt(Url(requestURL));
+	try
+	{
+		request.perform();
+		/* */
+		if (parser.parse(result.str(), server_populations))
+		{
+			(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
+			(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
+			(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
+		}
+	}
+	catch (exception &e)
+	{
+		cout << e.what() << endl;
+		force_resync = true;
+	}
+}
+/* */
 void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con)
 {
 	stringstream converter;
@@ -175,7 +207,8 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 			convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
 			SQLstmt += ",";
 			convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-			SQLstmt += ",\"\",\"\",\"\");"; //TODO 3 populations
+			get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
+			SQLstmt += ");";
 			//
 			try
 			{
@@ -277,8 +310,8 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     	string start_time = (*match_data)["start_time"].asString();
     	start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
     	start_time.erase(19,1); // ^^
-		res = stmt->executeQuery("SELECT max(timeStamp), "FIRST_SRV"Kills, "SECOND_SRV"Kills, "THIRD_SRV"Kills, "FIRST_SRV"Deaths, "SECOND_SRV"Deaths, "THIRD_SRV"Deaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\";");
-		if (res->next()) //TODO max(timeStamp) still giving previous timestamp data?
+		res = stmt->executeQuery("SELECT timeStamp, "FIRST_SRV"Kills, "SECOND_SRV"Kills, "THIRD_SRV"Kills, "FIRST_SRV"Deaths, "SECOND_SRV"Deaths, "THIRD_SRV"Deaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\" ORDER BY timeStamp DESC LIMIT 1;");
+		if (res->next())
 		{
 			append_server_stats(res->getString(FIRST_SRV"Kills"),&SQLstmt);
 			SQLstmt += ",";
