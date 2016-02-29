@@ -42,7 +42,6 @@ string previous_start_time = "";
 //TODO multithread
 //TODO calc weeknum
 //TODO calc tick_timer backwards from current
-//TODO grn/blu/red_srv_populations in storing match_details
 /* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
@@ -221,18 +220,25 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 	}
 }
 /* */
+void get_weekNumber(string *weekNum, string match_time)
+{ //TODO
+	(*weekNum) = "3";
+}
+/* */
 void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con)
 {
 	stringstream converter;
 	sql::Statement *stmt;
 	string SQLstmt;
+	string weekNum;
 	for (int i = 0; i < (int)(*match_data).size(); i++)
 	{
 		if ((((*match_data)[i]["id"]).asString())[0] == region[0])
 		{
+			get_weekNumber(&weekNum, (*match_data)[i]["start_time"].asString());
 			SQLstmt = "INSERT INTO match_details VALUES(";
 			SQLstmt += "\"" + (*match_data)[i]["id"].asString() + "\"";
-			SQLstmt += ",3"; //weekNumber
+			SQLstmt += ",\"" + weekNum + "\""; //weekNumber
 			SQLstmt += ",\"" + (*match_data)[i]["start_time"].asString() + "\"";
 			SQLstmt += ",\"" + (*match_data)[i]["end_time"].asString() + "\",";
 			convertNumToString(&converter, (*match_data)[i]["worlds"][FIRST_SRV].asInt(),&SQLstmt);
@@ -304,14 +310,12 @@ void append_server_stats(string data, string *SQLstmt)
 	}
 	(*SQLstmt) += data;
 }
-void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con)
+void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, struct tm *UTCTime)
 {
 	stringstream converter;
 	sql::Statement *stmt;
 	stmt = con->createStatement();
 	bool errorCorrected = false;
-	time_t t = time(NULL); //get current local time
-    struct tm * UTCTime = gmtime( & t ); //convert current time to UTC
     //
     string SQLstmt = "INSERT INTO map_scores VALUES(\"";
     convertNumToString(&converter,((*UTCTime).tm_year + 1900),&SQLstmt);
@@ -406,6 +410,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 	stringstream matchDetails;
 	Json::Value all_match_data;
 	Json::Reader parser;
+	struct tm * UTCTime;
 	/* */
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 	request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches?ids=all"));
@@ -428,6 +433,11 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 				}
 				stored_matchDetails = true;
 			}
+			if (ingame_clock_time == 14)
+			{ //if its time to store map_scores, get the current time in UTC format to pass later
+				time_t t = time(NULL); //get current local time
+    			UTCTime = gmtime( & t ); //convert current time to UTC		
+			}
 			for (int j = 0; j < (int)all_match_data.size(); j++)
 			{
 				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
@@ -437,7 +447,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 						store_activityData(&all_match_data[j], i, con, ingame_clock_time);
 						if (ingame_clock_time == 14)
 						{ //only store mapscore data every point-tally in-game
-							store_mapScores(&all_match_data[j], i, con);
+							store_mapScores(&all_match_data[j], i, con,UTCTime);
 						}
 					}
 				}
@@ -450,7 +460,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 		cout << e.what() << endl;
 	}
 }
-void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
+void sync_to_ingame_clock(string region, double timeToSleep) //1 = NA, 2 = EU
 {
 	Easy request;
 	stringstream matchDetails;
@@ -463,10 +473,11 @@ void sync_to_ingame_clock(string region, bool resync) //1 = NA, 2 = EU
 		//share the same in-game clock
 	request.setOpt(Url(match_url));
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
-	if (resync == true)
-	{ //only do an initial-pause on a resync, to save the number of calls made to the API
-		usleep(MICROSEC*0.75*TIME_RES); //wait 45 seconds to reduce the number of API calls made
+	if (timeToSleep < 0)
+	{
+		timeToSleep = 0;
 	}
+	usleep(timeToSleep); //wait some seconds to reduce the number of API calls made
 	while (1)
 	{
 		try
@@ -515,7 +526,7 @@ void collect_data(string region) //1 = North American, 2 = European
 		time_t beginTime, endTime;
 		double elapsed_msecs;
 		double ingame_clock_time = 14.0*60.0;
-		sync_to_ingame_clock(region,false);
+		sync_to_ingame_clock(region,0);
     	while (1)
 		{
 			beginTime = time(0);
@@ -524,9 +535,17 @@ void collect_data(string region) //1 = North American, 2 = European
 			cout << "Ending " << ingame_clock_time/60.0 << endl;
 			endTime = time(0);
 			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
+			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
+			{
+				cout << "Too much time elapsed! Resyncing" << endl;
+				elapsed_msecs = TIME_RES*MICROSEC-1;
+				ingame_clock_time = 14*60.0;
+				sync_to_ingame_clock(region,0);
+				force_resync = false;
+			}
 			if (ingame_clock_time/TIME_RES == 15)
 			{
-				sync_to_ingame_clock(region,true); //resync to in-game clock every cycle
+				sync_to_ingame_clock(region,MICROSEC*0.75*TIME_RES - elapsed_msecs); //resync to in-game clock every cycle
 				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
 			else if (ingame_clock_time/TIME_RES <= 1)
@@ -534,14 +553,6 @@ void collect_data(string region) //1 = North American, 2 = European
 				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtracted later
 			}
 			ingame_clock_time -= TIME_RES;
-			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
-			{
-				cout << "Too much time elapsed! Resyncing" << endl;
-				elapsed_msecs = TIME_RES*MICROSEC-1;
-				ingame_clock_time = 14*60.0;
-				sync_to_ingame_clock(region,false);
-				force_resync = false;
-			}
 			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
 			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
 			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs));
