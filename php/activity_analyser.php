@@ -3,6 +3,7 @@
 	try
 	{
 		$conn = new PDO("mysql:host=localhost;dbname=Gw2Analyser", $_SESSION["username"], $_SESSION["password"]);
+		$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 	catch(PDOException $e)
 	{
@@ -13,7 +14,6 @@
 	<title> Activity Analyser </title>
 	<body>
 	<?php
-	
 	echo "<form action=\"logout.php\" method=\"GET\">
 		<input type=\"submit\" value=\"Log out\"/>
 	</form>
@@ -35,16 +35,17 @@
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
 	echo "</table>
-	<input type=\"submit\" value=\"Submit Query\"/>
-	</form>";
-	echo "<center><form action=\"activity_analyser.php\">
+	<table>
+	<tr>
+	<td><input type=\"submit\" value=\"Submit Query\"/></td><td style=\"width:175px\"></td>
+	</form></td>
+	<td><form action=\"activity_analyser.php\">
 		<input type=\"submit\" value=\"Reset fields\"/>
-	</form></center>";
-	
-	
-		?>
+	</form></td>
+	</tr>
+	</table>";
+	?>
 
 	</table>
 	</body>
 </html>
-

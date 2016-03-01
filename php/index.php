@@ -17,9 +17,13 @@
 			<tr><td></td><td><input type="submit" value="Log In"></td></tr>
 		</table>
 		<?php
-			if ($_GET["error"] == "true")
+			if ($_GET["error"] == "inv_cred")
 			{
-				echo "<p>Error!</p><p>Incorrect username or password!</p>";
+				echo "<p>Error! Incorrect username or password!</p>";
+			}
+			else if ($_GET["error"] == "not_avail")
+			{
+				echo "<p>Error! That analyser is not yet available.</p>";
 			}
 		?>
 	</form>
