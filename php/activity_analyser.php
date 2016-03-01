@@ -7,7 +7,7 @@
 	}
 	catch(PDOException $e)
 	{
-		header("Location: logout.php?error=true"); //manually add a GET variable to tell the index-login page there was an error
+		header("Location: logout.php?error=inv_cred"); //manually add a GET variable to tell the index-login page there was an error
 	}
 ?>
 <html>
@@ -45,7 +45,47 @@
 	</tr>
 	</table>";
 	?>
-
-	</table>
+	<br/>
+	<?php
+		$activityQuery = "SELECT activity_data.match_id as \"Match ID\", week_num as \"Week Number\",
+		server_info.name as \"Server\", owner_color as \"Color\", last_flipped as \"Last Seized At\",
+		claimed_at as \"Claimed At\", tick_timer as \"Tick Timer\", objective.name as \"Objective Name\",
+		type as \"Objective Type\", compass_direction as \"Cardinal Direction\", map_type as \"Map\",
+		guild_name as \"Guild Name\", guild_tag as \"Guild Tag\"
+		FROM activity_data
+		INNER JOIN guild ON activity_data.guild_id=guild.guild_id
+		INNER JOIN objective ON activity_data.obj_id=objective.obj_id
+		INNER JOIN server_info on activity_data.owner_server=server_info.srv_id
+		INNER JOIN (SELECT match_id, week_num FROM match_details GROUP BY match_id) as match_details on match_details.match_id=activity_data.match_id
+		WHERE activity_data.match_id = activity_data.match_id "; //spoof WHERE clause
+		
+		$activityQuery .= "and activity_data.match_id = \"1-4\" and guild_tag = \"Os\"
+		ORDER BY last_flipped;";
+		?>
+		<?php
+			echo "<table border=\"1\">";
+			echo "<th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
+			<th>Last Seized At</th><th>Claimed At</th><th>Tick Timer</th><th>Objective Name</th>
+			<th>Objective Type</th><th>Cardinal Direction</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
+			foreach ($conn->query($activityQuery) as $row)
+			{
+				echo "<tr>";
+				echo "<td>" . $row["Match ID"] . "</td>";
+				echo "<td>" . $row["Week Number"] . "</td>";
+				echo "<td>" . $row["Server"] . "</td>";
+				echo "<td>" . $row["Color"] . "</td>";
+				echo "<td>" . $row["Last Seized At"] . "</td>";
+				echo "<td>" . $row["Claimed At"] . "</td>";
+				echo "<td>" . $row["Tick Timer"] . "</td>";
+				echo "<td>" . $row["Objective Name"] . "</td>";
+				echo "<td>" . $row["Objective Type"] . "</td>";
+				echo "<td>" . $row["Cardinal Direction"] . "</td>";
+				echo "<td>" . $row["Map"] . "</td>";
+				echo "<td>" . $row["Guild Name"] . "</td>";
+				echo "<td>" . $row["Guild Tag"] . "</td>";
+				echo "</tr>";
+			}
+			echo "</table>";
+		?>
 	</body>
 </html>
