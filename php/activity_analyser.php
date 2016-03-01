@@ -14,13 +14,12 @@
 	<body>
 	<?php
 	
-	echo "
-	<form action=\"logout.php\" method=\"GET\">
+	echo "<form action=\"logout.php\" method=\"GET\">
 		<input type=\"submit\" value=\"Log out\"/>
 	</form>
 	<form action=\"activity_analyser.php\" method=\"GET\">
-	<table>
-		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
+	<table>";
+	echo "<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"text\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Objective owner: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
 		<tr><td>Owner color: </td><td><input type=\"text\" name=\"owner_color\" value=\"" . $_GET["owner_color"] . "\"/></td></tr>
@@ -34,10 +33,13 @@
 		<tr><td>Objective type: </td><td><input type=\"text\" name=\"obj_type\" value=\"" . $_GET["obj_type"] . "\"/></td></tr>
 		<tr><td>Map type: </td><td><input type=\"text\" name=\"map_type\" value=\"" . $_GET["map_type"] . "\"/></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
-		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
-	</table>
+		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
+	echo "</table>
 	<input type=\"submit\" value=\"Submit Query\"/>
 	</form>";
+	echo "<center><form action=\"activity_analyser.php\">
+		<input type=\"submit\" value=\"Reset fields\"/>
+	</form></center>";
 	
 	
 		?>
