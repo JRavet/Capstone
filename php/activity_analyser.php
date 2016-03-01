@@ -63,7 +63,7 @@
 	<?php
 		$activityQuery = "SELECT activity_data.match_id as \"Match ID\", week_num as \"Week Number\",
 		server_info.name as \"Server\", owner_color as \"Color\", last_flipped as \"Last Seized At\",
-		claimed_at as \"Claimed At\", tick_timer as \"Tick Timer\", objective.name as \"Objective Name\",
+		claimed_at as \"Claimed At\", tick_timer as \"Ingame Clock\", objective.name as \"Objective Name\",
 		type as \"Objective Type\", compass_direction as \"Cardinal Direction\", map_type as \"Map\",
 		guild_name as \"Guild Name\", guild_tag as \"Guild Tag\"
 		FROM activity_data
@@ -76,7 +76,7 @@
 			$_GET["match_id"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
 			and $_GET["claimed_at_begin"] == "" and $_GET["claimed_at_end"] == "" and $_GET["tick_timer_begin"] == ""
-			and $_GET["tick_timer_end"] == "" and $_GET["obj_name"] == "" and $_G3ET["obj_type"] == ""
+			and $_GET["tick_timer_end"] == "" and $_GET["obj_name"] == "" and $_GET["obj_type"] == ""
 			and $_GET["map_type"] == "" and $_GET["guild_name"] == "" and $_GET["guild_tag"] == ""
 		)
 		{
@@ -124,7 +124,7 @@
 		}
 		if ($_GET["obj_name"] != "")
 		{
-			$activityQuery .= "and objective.name = \"" . $_GET["obj_name"] . "\" ";
+			$activityQuery .= "and objective.name LIKE \"%" . $_GET["obj_name"] . "%\" ";
 		}
 		if ($_GET["obj_type"] != "")
 		{
@@ -136,7 +136,7 @@
 		}
 		if ($_GET["guild_name"] != "")
 		{
-			$activityQuery .= "and guild_name = \"" . $_GET["guild_name"] . "\" ";
+			$activityQuery .= "and guild_name LIKE \"%" . $_GET["guild_name"] . "%\" ";
 		}
 		if ($_GET["guild_tag"] != "")
 		{
@@ -148,10 +148,14 @@
 		//
 		echo "<table border=\"1\">";
 		echo "<th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
-		<th>Last Seized At</th><th>Claimed At</th><th>Tick Timer</th><th>Objective Name</th>
+		<th>Last Seized At</th><th>Claimed At</th><th>Ingame Clock</th><th>Objective Name</th>
 		<th>Objective Type</th><th>Cardinal Direction</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
-		foreach ($conn->query($activityQuery) as $row)
+		$time_start = microtime(true); 
+		$i = 0;
+		$resultSet = $conn->query($activityQuery);
+		foreach ($resultSet as $row)
 		{
+			$i++;
 			echo "<tr>";
 			echo "<td>" . $row["Match ID"] . "</td>";
 			echo "<td>" . $row["Week Number"] . "</td>";
@@ -159,7 +163,7 @@
 			echo "<td>" . $row["Color"] . "</td>";
 			echo "<td>" . $row["Last Seized At"] . "</td>";
 			echo "<td>" . $row["Claimed At"] . "</td>";
-			echo "<td>" . $row["Tick Timer"] . "</td>";
+			echo "<td>" . $row["Ingame Clock"] . "</td>";
 			echo "<td>" . $row["Objective Name"] . "</td>";
 			echo "<td>" . $row["Objective Type"] . "</td>";
 			echo "<td>" . $row["Cardinal Direction"] . "</td>";
@@ -168,6 +172,7 @@
 			echo "<td>" . $row["Guild Tag"] . "</td>";
 			echo "</tr>";
 		}
+		echo $i . ' results in  ' . (microtime(true) - $time_start) . ' seconds';
 		echo "</table>";
 	?>
 	</body>
