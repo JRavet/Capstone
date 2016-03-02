@@ -9,15 +9,15 @@
 	{
 		header("Location: logout.php?error=inv_cred"); //manually add a GET variable to tell the index-login page there was an error
 	}
-	echo "<table>";
-	echo "<tr><form action=\"logout.php\" method=\"GET\">
-		<input type=\"submit\" value=\"Log out\"/>
-	</form>";
-	echo "<tr><form action=\"activity_analyser.php\">
+	echo "<table><tr>";
+	echo "<td><form action=\"activity_analyser.php\">
 		<input type=\"submit\" value=\"Activity Analyser\">
-		</form></tr>";
-	echo "<tr><form action=\"guild_analyser.php\">
+		</form></td>";
+	echo "<td><form action=\"guild_analyser.php\">
 		<input type=\"submit\" value=\"Guild Analyser\">
-		</form></tr>";
-	echo "</table><br/>";
+		</form></td>";
+	echo "<td><form action=\"logout.php\" method=\"GET\">
+		<input type=\"submit\" value=\"Log out\"/>
+	</form></td>";
+	echo "</tr></table><br/>";
 ?>
