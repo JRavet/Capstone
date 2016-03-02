@@ -20,11 +20,11 @@
 	<form action=\"activity_analyser.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">
+			<option value=\"last_flipped\">Last Seized At</option>
 			<option value=\"activity_data.match_id\">Match ID</option>
 			<option value=\"week_num\">Week Number</option>
 			<option value=\"server_info.name\">Objective Owner</option>
 			<option value=\"owner_color\">Owner Color</option>
-			<option value=\"last_flipped\">Last Seized At</option>
 			<option value=\"claimed_at\">Claimed At</option>
 			<option value=\"tick_timer\">In-game clock time</option>
 			<option value=\"objective.name\">Objective Name</option>
@@ -92,7 +92,7 @@
 		}
 		if ($_GET["obj_owner"] != "")
 		{
-			$activityQuery .= "and server_info.name  = \"" . $_GET["obj_owner"] . "\" ";
+			$activityQuery .= "and server_info.name LIKE \"%" . $_GET["obj_owner"] . "%\" ";
 		}
 		if ($_GET["owner_color"] != "")
 		{
@@ -172,7 +172,7 @@
 			echo "<td>" . $row["Guild Tag"] . "</td>";
 			echo "</tr>";
 		}
-		echo $i . ' results in  ' . (microtime(true) - $time_start) . ' seconds';
+		echo $i . ' results in  ' . (microtime(true) - $time_start)*1000 . ' milliseconds';
 		echo "</table>";
 	?>
 	</body>
