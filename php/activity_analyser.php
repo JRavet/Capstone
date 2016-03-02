@@ -104,7 +104,7 @@
 		}
 		if ($_GET["last_flipped_end"] != "")
 		{
-			$activityQuery .= "and last_flipped < \"" . $_GET["last_flipped_end"] . "\" ";
+			$activityQuery .= "and last_flipped <= \"" . $_GET["last_flipped_end"] . "\" ";
 		}
 		if ($_GET["claimed_at_begin"] != "")
 		{
@@ -112,7 +112,7 @@
 		}
 		if ($_GET["claimed_at_end"] != "")
 		{
-			$activityQuery .= "and claimed_at < \"" . $_GET["claimed_at_end"] . "\" ";
+			$activityQuery .= "and claimed_at <= \"" . $_GET["claimed_at_end"] . "\" ";
 		}
 		if ($_GET["tick_timer_begin"] != "")
 		{
@@ -120,7 +120,7 @@
 		}
 		if ($_GET["tick_timer_end"] != "")
 		{
-			$activityQuery .= "and tick_timer < \"" . $_GET["tick_timer_end"] . "\" ";
+			$activityQuery .= "and tick_timer <= \"" . $_GET["tick_timer_end"] . "\" ";
 		}
 		if ($_GET["obj_name"] != "")
 		{
