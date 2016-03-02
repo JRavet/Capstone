@@ -118,7 +118,7 @@
 		}
 		if ($_GET["map_type"] != "")
 		{
-			$activityQuery .= "and objective.map_type = \"" . $_GET["map_type"] . "\" ";
+			$activityQuery .= "and objective.map_type LIKE \"%" . $_GET["map_type"] . "%\" ";
 		}
 		if ($_GET["guild_name"] != "")
 		{
