@@ -3,10 +3,7 @@
 	<title> Guild Analyser </title>
 	<body>
 	<?php
-	echo "<form action=\"logout.php\" method=\"GET\">
-		<input type=\"submit\" value=\"Log out\"/>
-	</form>
-	<form action=\"guild_analyser.php\" method=\"GET\">
+	echo "<form action=\"guild_analyser.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">
 			<option value=\"count(*)\">Claims</option>
