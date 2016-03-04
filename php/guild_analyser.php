@@ -2,17 +2,28 @@
 <html>
 	<title> Guild Analyser </title>
 	<body>
+	<?php 
+	function generate_option($value,$text,$select_name)
+	{
+		echo "<option value=\"" . $value . "\" ";
+		if ($_GET[$select_name] == $value)
+		{
+			echo "selected=\"true\"";
+		}
+		echo ">" . $text . "</option>";
+	}
+	?>
 	<?php
 	echo "<form action=\"guild_analyser.php\" method=\"GET\">
 	<table>";
-	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">
-			<option value=\"count(*)\">Claim Count</option>
-			<option value=\"guild.guild_name\">Guild Name</option>
-			<option value=\"guild.guild_tag\">Guild Tag</option>
-		</select>
+	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
+	generate_option("count(*)","Claim Count","sort_by");
+	generate_option("guild.guild_name","Guild Name","sort_by");
+	generate_option("guild.guild_tag","Guild Tag","sort_by");
+	echo "</select>
 		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"text\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
-		<tr><td>Objective owner: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
+		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
 		<tr><td>Owner color: </td><td><input type=\"text\" name=\"owner_color\" value=\"" . $_GET["owner_color"] . "\"/></td></tr>
 		<tr><td>Last seized: </td><td><input type=\"text\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"text\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>

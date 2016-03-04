@@ -2,26 +2,37 @@
 <html>
 	<title> Activity Analyser </title>
 	<body>
+	<?php 
+	function generate_option($value,$text,$select_name)
+	{
+		echo "<option value=\"" . $value . "\" ";
+		if ($_GET[$select_name] == $value)
+		{
+			echo "selected=\"true\"";
+		}
+		echo ">" . $text . "</option>";
+	}
+	?>
 	<?php
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">
 	<table>";
-	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">
-			<option value=\"last_flipped\">Last Seized At</option>
-			<option value=\"activity_data.match_id\">Match ID</option>
-			<option value=\"week_num\">Week Number</option>
-			<option value=\"server_info.name\">Objective Owner</option>
-			<option value=\"owner_color\">Owner Color</option>
-			<option value=\"claimed_at\">Claimed At</option>
-			<option value=\"tick_timer\">In-game clock time</option>
-			<option value=\"objective.name\">Objective Name</option>
-			<option value=\"objective.type\">Objective Type</option>
-			<option value=\"objective.map_type\">Map</option>
-			<option value=\"guild.guild_name\">Guild Name</option>
-			<option value=\"guild.guild_tag\">Guild Tag</option>
-		</select>
+	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
+		generate_option("last_flipped","Last Seized At","sort_by");
+		generate_option("activity_data.match_id","Match ID","sort_by");
+		generate_option("week_num","Week Number","sort_by");
+		generate_option("server_info.name","Owner Server","sort_by");
+		generate_option("owner_color","Objective Owner","sort_by");
+		generate_option("claimed_at","Claimed At","sort_by");
+		generate_option("tick_timer","In-game Clock Time","sort_by");
+		generate_option("objective.name","Objective Name","sort_by");
+		generate_option("objective.type","Objective Type","sort_by");
+		generate_option("objective.map_type","Map","sort_by");
+		generate_option("guild.guild_name","Guild Name","sort_by");
+		generate_option("guild.guild_tag","Guild Tag","sort_by");
+		echo "</select>
 		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"text\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
-		<tr><td>Objective owner: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
+		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
 		<tr><td>Owner color: </td><td><input type=\"text\" name=\"owner_color\" value=\"" . $_GET["owner_color"] . "\"/></td></tr>
 		<tr><td>Last seized: </td><td><input type=\"text\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"text\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
@@ -33,7 +44,8 @@
 		<tr><td>Objective type: </td><td><input type=\"text\" name=\"obj_type\" value=\"" . $_GET["obj_type"] . "\"/></td></tr>
 		<tr><td>Map type: </td><td><input type=\"text\" name=\"map_type\" value=\"" . $_GET["map_type"] . "\"/></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
-		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
+		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
+		<tr><td>Page #:</td><td><input type=\"text\" name=\"offset_num\" value=\"" . $_GET["offset_num"] . "\"/></td></tr>";
 	echo "</table>
 	<table>
 	<tr>
@@ -47,6 +59,7 @@
 	?>
 	<br/>
 	<?php
+		$offset_amount = 500;
 		$activityQuery = "SELECT activity_data.match_id as \"Match ID\", week_num as \"Week Number\",
 		server_info.name as \"Server\", owner_color as \"Color\", last_flipped as \"Last Seized At\",
 		claimed_at as \"Claimed At\", tick_timer as \"Ingame Clock\", objective.name as \"Objective Name\",
@@ -128,7 +141,7 @@
 		{
 			$activityQuery .= "and guild_tag = \"" . $_GET["guild_tag"] . "\" ";
 		}
-		$activityQuery .= "ORDER BY " . $_GET["sort_by"] . " LIMIT 500;";
+		$activityQuery .= "ORDER BY " . $_GET["sort_by"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
 		//
 		//
 		//
@@ -142,28 +155,27 @@
 		foreach ($resultSet as $row)
 		{
 			$i++;
-			echo "<tr>";
-			echo "<td>" . $i . "</td>";
-			echo "<td>" . $row["Match ID"] . "</td>";
-			echo "<td>" . $row["Week Number"] . "</td>";
-			echo "<td>" . $row["Server"] . "</td>";
-			echo "<td>" . $row["Color"] . "</td>";
-			echo "<td>" . $row["Last Seized At"] . "</td>";
-			echo "<td>" . $row["Claimed At"] . "</td>";
-			echo "<td>" . $row["Ingame Clock"] . "</td>";
-			echo "<td>" . $row["Objective Name"] . "</td>";
-			echo "<td>" . $row["Objective Type"] . "</td>";
-			echo "<td>" . $row["Cardinal Direction"] . "</td>";
-			echo "<td>" . $row["Map"] . "</td>";
-			echo "<td>" . $row["Guild Name"] . "</td>";
-			echo "<td>" . $row["Guild Tag"] . "</td>";
-			echo "</tr>";
-			if ($i == 500)
+			if ($i < $offset_amount + 1)
 			{
-				echo "Limited to 500 results.<p>";
+			    echo "<tr>";
+			    echo "<td>" . $i . "</td>";
+			    echo "<td>" . $row["Match ID"] . "</td>";
+			    echo "<td>" . $row["Week Number"] . "</td>";
+			    echo "<td>" . $row["Server"] . "</td>";
+			    echo "<td>" . $row["Color"] . "</td>";
+			    echo "<td>" . $row["Last Seized At"] . "</td>";
+			    echo "<td>" . $row["Claimed At"] . "</td>";
+			    echo "<td>" . $row["Ingame Clock"] . "</td>";
+			    echo "<td>" . $row["Objective Name"] . "</td>";
+			    echo "<td>" . $row["Objective Type"] . "</td>";
+			    echo "<td>" . $row["Cardinal Direction"] . "</td>";
+			    echo "<td>" . $row["Map"] . "</td>";
+			    echo "<td>" . $row["Guild Name"] . "</td>";
+			    echo "<td>" . $row["Guild Tag"] . "</td>";
+			    echo "</tr>";
 			}
 		}
-		echo $i . ' results in  ' . (microtime(true) - $time_start)*1000 . ' milliseconds';
+		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" . ($_GET["offset_num"]+1)*$offset_amount . " out of " . ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
 		echo "</table>";
 	?>
 	</body>
