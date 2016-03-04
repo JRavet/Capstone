@@ -12,6 +12,17 @@
 		}
 		echo ">" . $text . "</option>";
 	}
+	function check_inputs()
+	{
+		$pattern = '|()[]{}/\\\'\"-+_:;*&^%$#@!?<>,';
+		foreach ($_GET as $param)
+		{
+			if (strpos($pattern,$param) !== false)
+			{
+				die("Invalid input");
+			}
+		}
+	}
 	?>
 	<?php
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">
@@ -29,17 +40,17 @@
 		generate_option("objective.map_type","Map","sort_by");
 		generate_option("guild.guild_name","Guild Name","sort_by");
 		generate_option("guild.guild_tag","Guild Tag","sort_by");
-		echo "</select>
+	echo "</select>
 		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
-		<tr><td>Week number: </td><td><input type=\"number\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
+		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
 		<tr><td>Owner color: </td><td><input type=\"text\" name=\"owner_color\" value=\"" . $_GET["owner_color"] . "\"/></td></tr>
 		<tr><td>Last seized: </td><td><input type=\"datetime\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"datetime\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
 		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
 			<td><input type=\"datetime\" name=\"claimed_at_end\" value=\"" . $_GET["claimed_at_end"] . "\"/></td></tr>
-		<tr><td>In-game clock time: </td><td><input type=\"number\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"number\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
+		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
+			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Objective name: </td><td><input type=\"text\" name=\"obj_name\" value=\"" . $_GET["obj_name"] . "\"/></td></tr>
 		<tr><td>Objective type: </td><td><input type=\"text\" name=\"obj_type\" value=\"" . $_GET["obj_type"] . "\"/></td></tr>
 		<tr><td>Map type: </td><td><input type=\"text\" name=\"map_type\" value=\"" . $_GET["map_type"] . "\"/></td></tr>
@@ -81,6 +92,7 @@
 		{
 			die(""); //if the user did not enter any search criteria, stop early
 		}
+		check_inputs();
 		if ($_GET["match_id"] != "")
 		{
 			$activityQuery .= "and activity_data.match_id = \"" . $_GET["match_id"] . "\" ";
@@ -174,7 +186,13 @@
 			    echo "</tr>";
 			}
 		}
-		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" . ($_GET["offset_num"]+1)*$offset_amount . " out of " . ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
+		if ($i == 0)
+		{
+			die("<p>Page number too high; data out of range.</p>");
+		}
+		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
+		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
+		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
 		echo "</table>";
 	?>
 	</body>
