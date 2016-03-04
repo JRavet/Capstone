@@ -128,12 +128,12 @@
 		{
 			$activityQuery .= "and guild_tag = \"" . $_GET["guild_tag"] . "\" ";
 		}
-		$activityQuery .= "ORDER BY " . $_GET["sort_by"] . ";";
+		$activityQuery .= "ORDER BY " . $_GET["sort_by"] . " LIMIT 500;";
 		//
 		//
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
+		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
 		<th>Last Seized At</th><th>Claimed At</th><th>Ingame Clock</th><th>Objective Name</th>
 		<th>Objective Type</th><th>Cardinal Direction</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
 		$time_start = microtime(true); 
@@ -143,6 +143,7 @@
 		{
 			$i++;
 			echo "<tr>";
+			echo "<td>" . $i . "</td>";
 			echo "<td>" . $row["Match ID"] . "</td>";
 			echo "<td>" . $row["Week Number"] . "</td>";
 			echo "<td>" . $row["Server"] . "</td>";
@@ -157,6 +158,10 @@
 			echo "<td>" . $row["Guild Name"] . "</td>";
 			echo "<td>" . $row["Guild Tag"] . "</td>";
 			echo "</tr>";
+			if ($i == 500)
+			{
+				echo "Limited to 500 results.<p>";
+			}
 		}
 		echo $i . ' results in  ' . (microtime(true) - $time_start)*1000 . ' milliseconds';
 		echo "</table>";

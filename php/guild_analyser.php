@@ -6,7 +6,7 @@
 	echo "<form action=\"guild_analyser.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">
-			<option value=\"count(*)\">Claims</option>
+			<option value=\"count(*)\">Claim Count</option>
 			<option value=\"guild.guild_name\">Guild Name</option>
 			<option value=\"guild.guild_tag\">Guild Tag</option>
 		</select>
@@ -121,7 +121,7 @@
 		//
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Number of Claims</th><th>Guild Name</th><th>Guild Tag</th>";
+		echo "<th>Row #</th><th>Number of Claims</th><th>Guild Name</th><th>Guild Tag</th>";
 		$time_start = microtime(true); 
 		$i = 0;
 		$resultSet = $conn->query($guildClaimQuery);
@@ -129,6 +129,7 @@
 		{
 			$i++;
 			echo "<tr>";
+			echo "<td>" . $i . "</td>";
 			echo "<td>" . $row["Number of Claims"] . "</td>";
 			echo "<td>" . $row["Guild Name"] . "</td>";
 			echo "<td>" . $row["Guild Tag"] . "</td>";
