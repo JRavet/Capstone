@@ -149,7 +149,6 @@
 		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
 		<th>Last Seized At</th><th>Claimed At</th><th>Ingame Clock</th><th>Objective Name</th>
 		<th>Objective Type</th><th>Cardinal Direction</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
-		$time_start = microtime(true); 
 		$i = 0;
 		$resultSet = $conn->query($activityQuery);
 		foreach ($resultSet as $row)

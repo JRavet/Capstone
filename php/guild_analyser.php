@@ -133,7 +133,6 @@
 		//
 		echo "<table border=\"1\">";
 		echo "<th>Row #</th><th>Number of Claims</th><th>Guild Name</th><th>Guild Tag</th>";
-		$time_start = microtime(true); 
 		$i = 0;
 		$resultSet = $conn->query($guildClaimQuery);
 		foreach ($resultSet as $row)
@@ -146,7 +145,7 @@
 			echo "<td>" . $row["Guild Tag"] . "</td>";
 			echo "</tr>";
 		}
-		echo $i . ' results in  ' . (microtime(true) - $time_start)*1000 . ' milliseconds';
+		echo $i . ' results<p>';
 		echo "</table>";
 	?>
 	</body>
