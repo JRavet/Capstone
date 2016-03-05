@@ -506,6 +506,10 @@ void sync_to_ingame_clock(string region, double timeToSleep) //1 = NA, 2 = EU
 				}
 				previousScore = currentScore;
 			}
+			else
+			{
+				cout << "Error parsing data in sync-loop!" << endl;
+			}
 			matchDetails.str("");
 			matchDetails.clear();
 		}
@@ -556,12 +560,12 @@ void collect_data(string region) //1 = North American, 2 = European
 			if (ingame_clock_time/TIME_RES == 15)
 			{
 				cout << "Sync-wait: " << (MICROSEC*0.75*TIME_RES - elapsed_msecs)/MICROSEC << endl;
-				sync_to_ingame_clock(region,MICROSEC*0.75*TIME_RES - elapsed_msecs); //resync to in-game clock every cycle
+				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs); //resync to in-game clock every cycle
 				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
 			else if (ingame_clock_time/TIME_RES <= 1)
 			{
-				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtracted later
+				ingame_clock_time = 15*60.0 + TIME_RES; //15 minutes + TIME_RES because 1 TIME_RES is subtracted below
 			}
 			ingame_clock_time -= TIME_RES;
 			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs));
