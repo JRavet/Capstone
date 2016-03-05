@@ -16,8 +16,33 @@
 	echo "<td><form action=\"guild_analyser.php\">
 		<input type=\"submit\" value=\"Guild Analyser\">
 		</form></td>";
+	echo "<td><form action=\"map_score_analyser.php\">
+		<input type=\"submit\" value=\"Map Score Analyser\">
+		</form></td>";
 	echo "<td><form action=\"logout.php\" method=\"GET\">
 		<input type=\"submit\" value=\"Log out\"/>
 	</form></td>";
 	echo "</tr></table><br/>";
 ?>
+<?php 
+	function generate_option($value,$text,$select_name)
+	{
+		echo "<option value=\"" . $value . "\" ";
+		if ($_GET[$select_name] == $value)
+		{
+			echo "selected=\"true\"";
+		}
+		echo ">" . $text . "</option>";
+	}
+	function check_inputs()
+	{
+		$pattern = '|()[]{}/\\\'\"+_;*&^%$#@!?<>,';
+		foreach ($_GET as $param)
+		{
+			if (strpos($pattern,$param) !== false)
+			{
+				die("Invalid input");
+			}
+		}
+	}
+	?>
