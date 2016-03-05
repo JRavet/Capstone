@@ -2,28 +2,6 @@
 <html>
 	<title> Activity Analyser </title>
 	<body>
-	<?php 
-	function generate_option($value,$text,$select_name)
-	{
-		echo "<option value=\"" . $value . "\" ";
-		if ($_GET[$select_name] == $value)
-		{
-			echo "selected=\"true\"";
-		}
-		echo ">" . $text . "</option>";
-	}
-	function check_inputs()
-	{
-		$pattern = '|()[]{}/\\\'\"-+_:;*&^%$#@!?<>,';
-		foreach ($_GET as $param)
-		{
-			if (strpos($pattern,$param) !== false)
-			{
-				die("Invalid input");
-			}
-		}
-	}
-	?>
 	<?php
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">
 	<table>";
