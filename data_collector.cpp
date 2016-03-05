@@ -237,32 +237,52 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 {
 	stringstream converter;
 	sql::Statement *stmt;
+	sql::ResultSet *res;
 	string SQLstmt;
 	string weekNum;
+	stmt = con->createStatement();
 	for (int i = 0; i < (int)(*match_data).size(); i++)
 	{
 		if ((((*match_data)[i]["id"]).asString())[0] == region[0])
 		{
-			get_weekNumber(&weekNum, (*match_data)[i]["start_time"].asString());
-			SQLstmt = "INSERT INTO match_details VALUES(";
-			SQLstmt += "\"" + (*match_data)[i]["id"].asString() + "\"";
-			SQLstmt += ",\"" + weekNum + "\"";
-			SQLstmt += ",\"" + (*match_data)[i]["start_time"].asString() + "\"";
-			SQLstmt += ",\"" + (*match_data)[i]["end_time"].asString() + "\",";
-			convertNumToString(&converter, (*match_data)[i]["worlds"][FIRST_SRV].asInt(),&SQLstmt);
-			SQLstmt += ",";
-			convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
-			SQLstmt += ",";
-			convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-			get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-			SQLstmt += ");";
-			//
 			try
 			{
-				stmt = con->createStatement();
-				stmt->execute(SQLstmt);
+				res = stmt->executeQuery("SELECT * FROM match_details WHERE match_id = \"" + (*match_data)[i]["id"].asString() + "\" and start_time =\"" + (*match_data)[i]["start_time"].asString() + "\";");
 			}
 			catch (sql::SQLException &e)
+			{
+				cout << e.what() << endl;
+			}
+			if (!res->next()) //if this set of match_details does not already exist in the DB
+			{
+				get_weekNumber(&weekNum, (*match_data)[i]["start_time"].asString());
+				SQLstmt = "INSERT INTO match_details VALUES(";
+				SQLstmt += "\"" + (*match_data)[i]["id"].asString() + "\"";
+				SQLstmt += ",\"" + weekNum + "\"";
+				SQLstmt += ",\"" + (*match_data)[i]["start_time"].asString() + "\"";
+				SQLstmt += ",\"" + (*match_data)[i]["end_time"].asString() + "\",";
+				convertNumToString(&converter, (*match_data)[i]["worlds"][FIRST_SRV].asInt(),&SQLstmt);
+				SQLstmt += ",";
+				convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
+				SQLstmt += ",";
+				convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
+				get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
+				SQLstmt += ");";
+				//
+				try
+				{
+					stmt->execute(SQLstmt);
+				}
+				catch (sql::SQLException &e)
+				{
+					cout << e.what() << endl;
+				}
+			}
+			try
+			{
+				delete res;
+			}
+			catch (exception &e)
 			{
 				cout << e.what() << endl;
 			}
