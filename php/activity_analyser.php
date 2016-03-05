@@ -80,8 +80,8 @@
 		INNER JOIN guild ON activity_data.guild_id=guild.guild_id
 		INNER JOIN objective ON activity_data.obj_id=objective.obj_id
 		INNER JOIN server_info on activity_data.owner_server=server_info.srv_id
-		INNER JOIN (SELECT match_id, week_num FROM match_details GROUP BY match_id) as match_details on match_details.match_id=activity_data.match_id
-		WHERE activity_data.match_id = activity_data.match_id "; //spoof WHERE clause to allow additional clauses prefixed with AND
+		INNER JOIN match_details on match_details.match_id=activity_data.match_id
+		WHERE activity_data.start_time = match_details.start_time "; //partially a spoof WHERE clause; also required to properly link activity_data and match_details
 		if (
 			$_GET["match_id"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
