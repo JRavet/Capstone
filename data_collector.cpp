@@ -139,6 +139,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		SQLstmt += ",\"" + objectives[i]["claimed_at"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
+		SQLstmt += ",NULL, NULL"; //TODO duration_ owned/claimed
 		SQLstmt += ");";
 		try
 		{
@@ -220,11 +221,12 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 }
 /* */
 void get_weekNumber(string *weekNum, string match_time)
-{
+{ //TODO: make use of current match_time!
 	time_t currentTime;
 	struct tm * currentTime_tm;
 	char weekNumber[3]; //2 characters + the null-character
 	//
+	//strptime("%Y-%m-%dT%H:%M:%SZ")
 	time(&currentTime); //get the current time
 	currentTime_tm = localtime(&currentTime); //convert current time to  the struct version
 	strftime (weekNumber,3,"%U",currentTime_tm); //get the weeknumber and store it in the character array
