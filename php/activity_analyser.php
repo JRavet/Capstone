@@ -32,7 +32,7 @@
 		generate_option("activity_data.match_id","Match ID","sort_by");
 		generate_option("week_num","Week Number","sort_by");
 		generate_option("server_info.name","Owner Server","sort_by");
-		generate_option("owner_color","Objective Owner","sort_by");
+		generate_option("owner_color","Owner Color","sort_by");
 		generate_option("claimed_at","Claimed At","sort_by");
 		generate_option("tick_timer","In-game Clock Time","sort_by");
 		generate_option("objective.name","Objective Name","sort_by");
@@ -56,7 +56,7 @@
 		<tr><td>Map type: </td><td><input type=\"text\" name=\"map_type\" value=\"" . $_GET["map_type"] . "\"/></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
-		<tr><td>Page #:</td><td><input type=\"number\" name=\"offset_num\" value=\"" . $_GET["offset_num"] . "\"/></td></tr>";
+		<tr><td>Page #:</td><td><input type=\"number\" min=\"0\" name=\"offset_num\" value=\"" . $_GET["offset_num"] . "\"/></td></tr>";
 	echo "</table>
 	<table>
 	<tr>
@@ -186,9 +186,9 @@
 			    echo "</tr>";
 			}
 		}
-		if ($i == 0)
+		if ($i == 0 and $_GET["offset_num"] > 0)
 		{
-			die("<p>Page number too high; data out of range.</p>");
+			die("Page number too high; data out of range.<p>");
 		}
 		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
