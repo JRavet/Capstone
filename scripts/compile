@@ -1,0 +1,294 @@
+#!/bin/bash
+VERSION=1.0.1.31 #Version number for display to user & coder
+#Created by Jeremy Ravet
+#BEGIN PARAMETER LIST--------------------------------
+#-a :: compile all *.$FEND files in folder
+#-s :: suppress script messages [except errors or issues]
+#-g :: adds the -g tag to the g++ commands to debug code
+#-r :: recompile all files regardless if they need it;
+#-c :: remove debug files after program runs; doesn't work without -g
+#-o :: remove the -Wall from compiling; turns off warnings from compiler
+#-n :: compile and link, but do not run the resulting executable
+#--help :: see help & version info
+#--ver :: see the version number [also in --help]
+#--alias :: automatically alias this script to 'compile'; if already done it gives info
+# -- Any arguments must be in the same argument, but order does not matter, 
+#e.g "./compile -cargos"
+#END PARAMETER LIST----------------------------------
+#
+#BEGIN VARIABLES-------------
+#
+#BEGIN CHECK FOR BAD PARAMETERS-------
+if [[ ($1 != --help && $1 != --ver && $1 != --alias && $1 != --gdbhelp) && $1 == -*[!arogsnc]* && $1 != -*mp* && ! -z $1 ]]; then #If a bad parameter was sent in
+	if [[ $1 != --*help* && $1 != --*ver* && $1 != --*alias* && $1 != --gdbhelp ]]; then
+		INVALID=${1//[arognsc]} #Remove the proper parameters ... though it isn't perfect
+	else
+		INVALID=$1 #If --help, --ver or --alias is used incorrectly, just give the whole string
+	fi
+	builtin echo $SCRIPTNAME": invalid option or option combination -- '$INVALID' 
+Try '$SCRIPTNAME --help' for more information." #Tell the user about it and then exit
+	exit 1
+fi
+#END CHECK FOR BAD PARAMETERS---------
+FEND="cpp" #File extension (FEND) of source files goes here
+EXE="program.exe" #Name of executable/product goes here. Deleted after being run
+COMPILEDFILES="./CompiledFiles"; #Name of folder for compiled files to be placed in
+
+	###################################--MANUAL FILE LIST GOES BELOW--##################
+	declare -a FILES=() 
+	#.$FEND files to be compiled go in here WITHOUT extensions; manual
+	###################################--MANUAL FILE LIST GOES ABOVE--##################
+#******************************************************************************************
+#******************************************************************************************
+#************************* THINGS BELOW SHOULD NOT BE CHANGED *****************************
+#******************************************************************************************
+#BEGIN ARGUMENT PRE-RUN SETTINGS------------------------------------------------------------
+SCRIPTNAME=`basename $0` #Used primarily for display purposes in --help
+ALIASPATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #Used primarily for the --alias command
+if [[ $1 == --alias ]]; then #If the user wanted to see the alias settings
+	if [[ ! $(grep "alias compile" ~/.bashrc) ]]; then #If we cannot find the alias
+		 builtin echo "alias compile=\"$ALIASPATH/$SCRIPTNAME\"" >> ~/.bashrc #Make it!
+		 builtin echo "Alias complete."
+	fi
+	builtin echo "$SCRIPTNAME is aliased." #Tell the user about aliasing
+	builtin echo "The script can be called from any location currently in the terminal."
+	builtin echo "It acts like normal, in that you can simply type, for example, 'compile -a'"
+	builtin echo "The alias $(tput bold)only takes effect after restarting the terminal$(tput sgr0) (one time only)"
+	builtin echo "To view the alias, type:
+   $(tput bold)grep \"compile\" ~/.bashrc$(tput sgr0)"
+	builtin echo "To change the alias or remove it, type in the terminal:"
+	builtin echo "   $(tput bold)gedit ~/.bashrc$(tput sgr0)"
+	builtin echo "Then remove the entry containing the alias."
+	builtin echo "Number of entries in ~/.bashrc containing 'alias compile':" $(grep "alias compile" ~/.bashrc | wc -l) #Show the user the # of potential aliases for this script
+	exit 0 #Success
+fi
+#
+if [[ $1 == --ver ]]; then
+	builtin echo "v."$VERSION
+	exit
+fi
+if [[ ! $1 == -*s* ]]; then #If the user didn't want explanations (s for suppress)
+	RMOP="-v" #Any files removed will notify the user as well
+else
+	echo() { :; } #Otherwise tell the script its going to comment out the other lines...
+	printf() { :; }
+fi
+if [[ $1 == -*n* ]]; then
+	NORUN=true;
+else
+	NORUN=false;
+fi
+if [[ $1 == -*a* ]]; then
+	if [[ $2 == -rec ]]; then
+		START=$(find . -type f | grep .$FEND)
+	else
+		START=$(ls *.$FEND) #Make a list of files in the current dir that end in .$FEND
+	fi
+	for i in ${START[@]} #For every element in that list
+		do #Note: The following only operates on a string representation of the file
+			FILES+=(${i%.$FEND}) #Remove the .$FEND and append it to the FILES list
+			COMPFILES+=(${i%.$FEND})
+		done
+fi
+if [[ ! $1 == -*o* ]]; then
+	COMPILEWALL="-Wall" #If the user did not want compiler warnings (-o is enabled), then don't
+fi
+COMPILEMESSAGE="out of date or doesn't exist ... " #Default compile message
+if [[ $1 == -*g* ]]; then
+	DEBUG="-g" #If the user entered -g, make all compile commands use -g as well
+	EXT="g" #EXT is the variable for the compiled files' extension
+else #Its used to differentiate between debugger files and straight-compiled files
+	EXT="o" #Solves the problem of .o files not being updated if debugged and never modified
+	if [[ $1 == -*c* ]]; then #If -c but not -g, tell user
+		builtin echo "-c disabled; must be used in conjunction with -g" #Not -g? Can't be -c
+	fi
+fi
+if [[ $1 == -*r* ]]; then #If user wanted to recompile files
+	COMPILEMESSAGE="recompiling file ... " #if -r, compile message is this
+fi
+#END ARGUMENT PRE-RUN SETTINGS--------------------------------------------------------------
+#END VARIABLES---------------
+#
+#BEGIN HELP-------------------------------------------------------------------------
+if [[ $1 == --help ]]; then #If the user wants the help ...
+	builtin echo "
+#Version $VERSION
+Script location: $0
+Usage: $SCRIPTNAME [OPTIONS] [-rec]
+                             ^optional
+   recursively compile all files from current directory & subdirectories
+
+This script will compile and link specified files together to run a C++ program."
+	builtin echo "It only compiles files which need to be compiled.
+If they have not changed, it will not compile (unless -r).
+
+It will:
+*compile the specified files if needed
+*place those files in a specific folder
+*link those files together to create an executable
+*run the executable
+*delete the executable upon successful script completion
+(*) Additional things may be done, depending upon the parameters below.
+" #Give it to them! Note that any weird spaces, tabs or new lines are intentional.
+	builtin echo "Command-line parameters: 
+-s 	> [\"Suppress\"] Suppress script messages [except warnings and errors]
+-g	> [\"Debug\"] Debug the specified files. Auto-runs basic gdb
+		- Run this script with --gbdhelp for help on running gdb
+		- Debug-files will end in '.g' rather than '.o'
+-a	> [\"All\"] Operate on all .$FEND files in current directory
+-r	> [\"Recompile\"] Recompile files even if they are unmodified
+-c	> [\"Cleanup\"] Remove debug-files after program runs.
+		- Only works when -g is used
+-n	> [\"No Run\"] Do not run the resulting executable. Only compile and link.
+-o	> [\"Warnings off\"] Remove compilation warnings from -Wall flag
+-rec	> Must be second argument. Recursively compile all files.
+		- WARNING: Be careful with this. 
+		- It will attempt to compile files from any subdirectories.
+		- If you accidentally try to compile everything ...
+		- ... use Control-C to interrupt.
+-mp	> Only compile files, don't link them or run the program.
+--ver	> Display the version number [also displayed above] and exit
+--alias	> Automatically alias this script under the alias 'compile'
+		- Only aliases if not already done
+		- Gives additional info on aliasing if already aliased
+--gdbhelp > Display help on how to use the debugger and exit
+--help 	> Display this help and exit
+
+Parameters may be combined in any order [except --help] to the same effect.
+	e.g. \""$SCRIPTNAME" -args\" or \""$SCRIPTNAME" -cgoa\"
+	
+You can redirect the output of this script (and your program's output) into a file, using (for example):
+$(tput bold)compile -ar > output.txt$(tput sgr0)
+Alternatively, you can use $(tput bold)&>$(tput sgr0) to redirect error messages to a file.
+
+Report '$SCRIPTNAME' bugs to ravetjs [ [ at ] ] plu.edu
+   (To prevent potential bot spam, @ was removed)
+"
+exit 0
+fi
+if [[ $1 == --gdbhelp ]]; then
+	builtin echo "
+	Note: all commands below are to be used without the quotes.
+Type: 'gdb' - in terminal to open the debugger in terminal.
+Type: 'file executable_name' - in gdb to set the file to run
+Type: 'run' - at gdb prompt. This will run the executable.
+Type: 'bt' - to get a stack dump.
+Type: 'p var_name' - to see value of variables.
+Type: 'quit' - to exit."
+exit 0
+fi
+#END HELP---------------------------------------------------------------------------
+#SCRIPT ACTUALLY STARTS HERE
+#BEGIN IF STATEMENTS--------------------------------------------------
+#
+#BEGIN NULL-LIST CHECK--------------
+if [[ ${#FILES[@]} == 0 ]]; then #If there are no files to compile or run
+	builtin echo "No input files specified." 
+	builtin echo "Exiting script ... " 
+	exit 1 #Exit the script, tell the user
+fi
+if [[ ! -d "${COMPILEDFILES}" ]]; then #If the CompiledFiles directory does not exist
+	echo "Directory ${COMPILEDFILES}: does not exist. Creating ${COMPILEDFILES} ..." #Tell user
+	$(mkdir ${COMPILEDFILES}) #Make the directory
+fi
+#END NULL-LIST CHECK----------------
+#
+#BEGIN IF STATEMENTS---------------------------------------------------
+for (( i = 0 ; i < ${#FILES[@]} ; i++ )) 
+	do #Iterate through array of FILES, to check for bad sources & update old compiled files
+		#BEGIN SOURCEFILE CHECK----------------------------------
+		if [[ ! -e ${FILES[$i]}.$FEND ]]; then #If one of the source files doesn't exist
+			builtin echo "Invalid source file name: ${FILES[$i]}.$FEND" #Tell the user about it
+			builtin echo "Exiting script ..." #Tell user whats about to happen
+			exit 1 #Exit the program
+		fi 
+		#END SOURCEFILE CHECK------------------------------------
+		#################PUT STUFF HERE
+		if [[ $2 == -rec ]]; then
+			COMPFILES[$i]=`basename "${FILES[$i]}" ` #Grab the basename of recursively-found files
+		fi #removes the filepath from their name
+		#################PUT STUFF HERE
+		#BEGIN DEFINING LIST OF FILES TO BE COMPILED---------------------------------------
+		LINKSTRING="$LINKSTRING ${COMPILEDFILES}/${COMPFILES[$i]}.$EXT " #Add file path of FILES
+		USERSTRING="$USERSTRING\n${COMPILEDFILES}/${COMPFILES[$i]}.$EXT " #Displayable version
+		#END DEFINING LIST OF FILES TO BE COMPILED-----------------------------------------
+		#
+		#BEGIN UPDATING COMPILED FILES-----------------------------------
+		if [[ ${COMPILEDFILES}/${COMPFILES[$i]}.$EXT -ot ${FILES[$i]}.$FEND || ( $1 == -*r*) ]]; then 
+			#If FILES[i].$EXT is older than FILES[i].$FEND or -r is on...
+			echo "${COMPILEDFILES}/${COMPFILES[$i]}.$EXT: $COMPILEMESSAGE"
+			echo "... compiling ${FILES[$i]}.$FEND to ${COMPILEDFILES}/${COMPFILES[$i]}.$EXT ..." #Tell user
+			$(g++ $DEBUG $COMPILEWALL -c ${FILES[$i]}.$FEND) #Then recompile the .$FEND into a .$EXT
+			COMPILERETCODE=$?
+			#If -g is used, $DEBUG adds -g to g++ command
+			if [[ $COMPILERETCODE != 0 ]]; then #If the return code of compiling is not 0
+				builtin echo "Failure to compile ${FILES[$i]}.$FEND" #Then the file did not compile
+				builtin echo "Exiting script ..." #Tell the user then exit the script
+				builtin echo "Exit code:" $COMPILERETCODE
+				exit $COMPILERETCODE
+			fi
+			$(mv ${COMPFILES[$i]}.o ${COMPILEDFILES}/${COMPFILES[$i]}.$EXT) 
+			MOVECODE=$?
+			if [[ $MOVECODE != 0 ]]; then
+				builtin echo "Failed to move ${FILES[$i]}.$EXT, exiting script ..."
+				exit $MOVECODE
+			fi
+			#Move compiled file to folder with designated extension 
+		fi #END UPDATING COMPILED FILES----------------------------------
+done #Finish iterating
+#END IF STATEMENTS----------------------------------------------------
+#
+#BEGIN COMPILING & RUNNING--------------------------------------------
+printf " Linking \n[$USERSTRING\n]\n" #Display to user what files are being linked
+echo " to ${EXE} ..." #and to what they are being linked to
+if [[ $1 != -*mp* ]]; then
+	g++ $COMPILEWALL -o ${EXE} ${LINKSTRING} -lcurl -lcurlpp -ljsoncpp -lmysqlcppconn #Link all compiled files into $EXE
+	if [[ -e ${EXE} ]]; then
+		echo "Running ${EXE} ..." #Display to user that the EXE is going to be run
+		echo "-------${EXE} output below-------" #easy-see separator
+		echo "" #White space before execution
+		if [[ $1 != -*g* ]]; then #If not debugging, just run the executable
+			if [[ $1 != -*n* ]]; then
+				./${EXE} #Run the EXE file
+			fi
+		else 
+		#DEBUG COMMANDS GO HERE###############################################
+			if [[ $1 != -*n* ]]; then
+				gdb -batch \
+				-ex "file $EXE" \
+				-ex "run" \
+				-ex "bt"
+			fi
+		#DEBUG COMMANDS GO ABOVE##############################################
+		fi 
+		RETURNCODE=$? #Get the program's return code, if there is one
+		echo "" #White space after execution
+		echo "-------${EXE} output above-------" #easy-see separator
+		#END COMPILING & RUNNING----------------------------------------------
+		#
+		#BEGIN USER NOTIFICATION & CLEANUP---------------------------------------------
+		echo "${EXE} terminated." #Display to user that the EXE has finished running
+		echo "${EXE} completion status:" ${RETURNCODE} #Show the return code of the program
+		#rm ${EXE} $RMOP -I #Remove the EXE file. -I just in case it tries to remove more than 3 files. $RMOP is -v if the user did not -s this script.
+	else
+		builtin echo "${EXE} not created due to fatal error. Script exited." 
+		exit 2 #If this happens, its because the EXE was not created
+	fi
+fi
+if [[ $1 == -*c* && $1 == -*g* ]]; then #if the user did -c for clean up...
+	echo "... cleaning up debug files ..." 
+	for (( i = 0 ; i < ${#FILES[@]} ; i++ )) 
+		do #iterate through FILES, and delete each .g
+		if [[ $2 != -rec ]]; then
+			if [[ -e $COMPILEDFILES/${FILES[$i]}.$EXT ]]; then
+				rm $COMPILEDFILES/${FILES[$i]}.$EXT $RMOP -I
+			fi
+		else
+			if [[ -e $COMPILEDFILES/${COMPFILES[$i]}.$EXT ]]; then
+				rm $COMPILEDFILES/${COMPFILES[$i]}.$EXT $RMOP -I
+			fi
+		fi
+	done
+	echo "... finished cleaning debug files"
+fi
+#END USER NOTIFICATION & CLEANUP------------------------------------------------
