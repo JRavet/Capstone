@@ -41,7 +41,6 @@ string previous_start_time = "";
 //TODO rename variables to be more descriptive
 //TODO multithread
 //TODO calc weeknum
-//TODO calc tick_timer backwards from current
 /* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
@@ -221,8 +220,15 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 }
 /* */
 void get_weekNumber(string *weekNum, string match_time)
-{ //TODO
-	(*weekNum) = "3";
+{
+	time_t currentTime;
+	struct tm * currentTime_tm;
+	char weekNumber[3]; //2 characters + the null-character
+	//
+	time(&currentTime); //get the current time
+	currentTime_tm = localtime(&currentTime); //convert current time to  the struct version
+	strftime (weekNumber,3,"%U",currentTime_tm); //get the weeknumber and store it in the character array
+	(*weekNum) = weekNumber;
 }
 /* */
 void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con)
@@ -238,7 +244,7 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 			get_weekNumber(&weekNum, (*match_data)[i]["start_time"].asString());
 			SQLstmt = "INSERT INTO match_details VALUES(";
 			SQLstmt += "\"" + (*match_data)[i]["id"].asString() + "\"";
-			SQLstmt += ",\"" + weekNum + "\""; //weekNumber
+			SQLstmt += ",\"" + weekNum + "\"";
 			SQLstmt += ",\"" + (*match_data)[i]["start_time"].asString() + "\"";
 			SQLstmt += ",\"" + (*match_data)[i]["end_time"].asString() + "\",";
 			convertNumToString(&converter, (*match_data)[i]["worlds"][FIRST_SRV].asInt(),&SQLstmt);
@@ -535,6 +541,8 @@ void collect_data(string region) //1 = North American, 2 = European
 			cout << "Ending " << ingame_clock_time/60.0 << endl;
 			endTime = time(0);
 			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
+			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
+			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
 			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
 			{
 				cout << "Too much time elapsed! Resyncing" << endl;
@@ -545,6 +553,7 @@ void collect_data(string region) //1 = North American, 2 = European
 			}
 			if (ingame_clock_time/TIME_RES == 15)
 			{
+				cout << "Sync-wait: " << (MICROSEC*0.75*TIME_RES - elapsed_msecs)/MICROSEC << endl;
 				sync_to_ingame_clock(region,MICROSEC*0.75*TIME_RES - elapsed_msecs); //resync to in-game clock every cycle
 				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
@@ -553,8 +562,6 @@ void collect_data(string region) //1 = North American, 2 = European
 				ingame_clock_time = 16*60.0; //16 minutes because 1 TIME_RES is subtracted later
 			}
 			ingame_clock_time -= TIME_RES;
-			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
-			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
 			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs));
 		}
 		delete con;
