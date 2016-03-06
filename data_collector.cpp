@@ -99,7 +99,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	delete res;
 }
 /* */
-void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time)
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, struct tm *UTCTime)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -140,6 +140,19 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
 		SQLstmt += ",NULL, NULL"; //TODO duration_ owned/claimed
+		SQLstmt += ",\"";
+		convertNumToString(&converter,((*UTCTime).tm_year + 1900),&SQLstmt);
+		SQLstmt += "-";
+		convertNumToString(&converter,((*UTCTime).tm_mon + 1),&SQLstmt);
+		SQLstmt += "-";
+		convertNumToString(&converter,((*UTCTime).tm_mday),&SQLstmt);
+		SQLstmt += " ";
+		convertNumToString(&converter,((*UTCTime).tm_hour),&SQLstmt);
+		SQLstmt += ":";
+		convertNumToString(&converter,((*UTCTime).tm_min),&SQLstmt);
+		SQLstmt += ":";
+		convertNumToString(&converter,((*UTCTime).tm_sec),&SQLstmt);
+		SQLstmt += "\"";
 		SQLstmt += ");";
 		try
 		{
@@ -461,18 +474,16 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 				}
 				stored_matchDetails = true;
 			}
-			if (ingame_clock_time == 14)
-			{ //if its time to store map_scores, get the current time in UTC format to pass later
-				time_t t = time(NULL); //get current local time
-    			UTCTime = gmtime( & t ); //convert current time to UTC		
-			}
+			//get the current time in UTC format to pass later
+			time_t t = time(NULL); //get current local time
+			UTCTime = gmtime( & t ); //convert current time to UTC		
 			for (int j = 0; j < (int)all_match_data.size(); j++)
 			{
 				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
 				{
 					for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
 					{
-						store_activityData(&all_match_data[j], i, con, ingame_clock_time);
+						store_activityData(&all_match_data[j], i, con, ingame_clock_time, UTCTime);
 						if (ingame_clock_time == 14)
 						{ //only store mapscore data every point-tally in-game
 							store_mapScores(&all_match_data[j], i, con,UTCTime);
