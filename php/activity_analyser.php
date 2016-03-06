@@ -6,6 +6,7 @@
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
+		generate_option("timeStamp","Time Stamp","sort_by");
 		generate_option("last_flipped","Last Seized At","sort_by");
 		generate_option("activity_data.match_id","Match ID","sort_by");
 		generate_option("week_num","Week Number","sort_by");
@@ -19,6 +20,8 @@
 		generate_option("guild.guild_name","Guild Name","sort_by");
 		generate_option("guild.guild_tag","Guild Tag","sort_by");
 	echo "</select>
+		<tr><td>Time Stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
+			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
 		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
@@ -56,7 +59,7 @@
 	<br/>
 	<?php
 		$offset_amount = 500;
-		$activityQuery = "SELECT activity_data.match_id as \"Match ID\", week_num as \"Week Number\",
+		$activityQuery = "SELECT timeStamp, activity_data.match_id as \"Match ID\", week_num as \"Week Number\",
 		server_info.name as \"Server\", owner_color as \"Color\", last_flipped as \"Last Seized At\",
 		claimed_at as \"Claimed At\", tick_timer as \"Ingame Clock\", objective.name as \"Objective Name\",
 		type as \"Objective Type\", compass_direction as \"Cardinal Direction\", map_type as \"Map\",
@@ -73,11 +76,20 @@
 			and $_GET["claimed_at_begin"] == "" and $_GET["claimed_at_end"] == "" and $_GET["tick_timer_begin"] == ""
 			and $_GET["tick_timer_end"] == "" and $_GET["obj_name"] == "" and $_GET["obj_type"] == ""
 			and $_GET["map_type"] == "" and $_GET["guild_name"] == "" and $_GET["guild_tag"] == ""
+			and $_GET["timeStamp_begin"] == "" and $_GET["timeStamp_end"] == ""
 		)
 		{
 			die(""); //if the user did not enter any search criteria, stop early
 		}
 		check_inputs();
+		if ($_GET["timeStamp_begin"] != "")
+		{
+			$activityQuery .= "and timeStamp >= \"" . $_GET["timeStamp_begin"] . "\" ";
+		}
+		if ($_GET["timeStamp_end"] != "")
+		{
+			$activityQuery .= "and timeStamp <= \"" . $_GET["timeStamp_end"] . "\" ";
+		}
 		if ($_GET["match_id"] != "")
 		{
 			$activityQuery .= "and activity_data.match_id = \"" . $_GET["match_id"] . "\" ";
@@ -143,7 +155,7 @@
 		//
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
+		echo "<th>Row #</th><th>Time Stamp</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
 		<th>Last Seized At</th><th>Claimed At</th><th>Ingame Clock</th><th>Objective Name</th>
 		<th>Objective Type</th><th>Cardinal Direction</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
 		$i = 0;
@@ -155,6 +167,7 @@
 			{
 			    echo "<tr>";
 			    echo "<td>" . $i . "</td>";
+			    echo "<td>" . $row["timeStamp"] . "</td>";
 			    echo "<td>" . $row["Match ID"] . "</td>";
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Server"] . "</td>";
