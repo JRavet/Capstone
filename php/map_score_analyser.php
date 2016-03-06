@@ -14,7 +14,14 @@
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Time stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
-		<tr><td>Map Type: </td><td><input type=\"text\" name=\"map_type\" value=\"" . $_GET["map_type"] . "\"/></td></tr>
+		<tr><td>Map type: </td><td><select name=\"map_type\">";
+		generate_option("","All Maps","map_type");
+		generate_option("center","Eternal Battlegrounds","map_type");
+		generate_option("greenHome","Green Borderlands","map_type");
+		generate_option("blueHome","Blue Borderlands","map_type");
+		generate_option("redHome","Red Borderlands","map_type");
+		generate_option("home","All Borderlands","map_type");
+		echo "</select></td></tr>
 		<tr><td>Page #:</td><td><input type=\"number\" min=\"0\" name=\"offset_num\" value=\"" . $_GET["offset_num"] . "\"/></td></tr>";
 	echo "</table>
 	<table>
@@ -65,11 +72,11 @@
 		}
 		if ($_GET["timeStamp_begin"] != "")
 		{
-			$scoreQuery .= "and timeStamp_begin >= \"" . $_GET["timeStamp_begin"] . "\" ";
+			$scoreQuery .= "and timeStamp >= \"" . $_GET["timeStamp_begin"] . "\" ";
 		}
 		if ($_GET["last_flipped_end"] != "")
 		{
-			$scoreQuery .= "and timeStamp_end <= \"" . $_GET["timeStamp_end"] . "\" ";
+			$scoreQuery .= "and timeStamp <= \"" . $_GET["timeStamp_end"] . "\" ";
 		}
 		$scoreQuery .= " GROUP BY timeStamp, map_scores.match_id ORDER BY " . $_GET["sort_by"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
 		//

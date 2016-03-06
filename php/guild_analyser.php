@@ -22,7 +22,14 @@
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Objective name: </td><td><input type=\"text\" name=\"obj_name\" value=\"" . $_GET["obj_name"] . "\"/></td></tr>
 		<tr><td>Objective type: </td><td><input type=\"text\" name=\"obj_type\" value=\"" . $_GET["obj_type"] . "\"/></td></tr>
-		<tr><td>Map type: </td><td><input type=\"text\" name=\"map_type\" value=\"" . $_GET["map_type"] . "\"/></td></tr>
+		<tr><td>Map type: </td><td><select name=\"map_type\">";
+		generate_option("","All Maps","map_type");
+		generate_option("center","Eternal Battlegrounds","map_type");
+		generate_option("greenHome","Green Borderlands","map_type");
+		generate_option("blueHome","Blue Borderlands","map_type");
+		generate_option("redHome","Red Borderlands","map_type");
+		generate_option("home","All Borderlands","map_type");
+		echo "</select></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
 	echo "</table>
