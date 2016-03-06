@@ -5,22 +5,35 @@
 	<?php
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">
 	<table>";
-	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
-		generate_option("timeStamp","Time Stamp","sort_by");
-		generate_option("last_flipped","Last Seized At","sort_by");
-		generate_option("activity_data.match_id","Match ID","sort_by");
-		generate_option("week_num","Week Number","sort_by");
-		generate_option("server_info.name","Owner Server","sort_by");
-		generate_option("owner_color","Owner Color","sort_by");
-		generate_option("claimed_at","Claimed At","sort_by");
-		generate_option("tick_timer","In-game Clock Time","sort_by");
-		generate_option("objective.name","Objective Name","sort_by");
-		generate_option("objective.type","Objective Type","sort_by");
-		generate_option("objective.map_type","Map","sort_by");
-		generate_option("guild.guild_name","Guild Name","sort_by");
-		generate_option("guild.guild_tag","Guild Tag","sort_by");
-	echo "</select>
-		<tr><td>Time Stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
+	echo "<tr><td>Sort by:</td><td><select name=\"sort_by1\">";
+		generate_option("timeStamp","Time Stamp","sort_by1");
+		generate_option("activity_data.match_id","Match ID","sort_by1");
+		generate_option("last_flipped","Last Seized At","sort_by1");
+		generate_option("week_num","Week Number","sort_by1");
+		generate_option("server_info.name","Owner Server","sort_by1");
+		generate_option("owner_color","Owner Color","sort_by1");
+		generate_option("claimed_at","Claimed At","sort_by1");
+		generate_option("tick_timer","In-game Clock Time","sort_by1");
+		generate_option("objective.name","Objective Name","sort_by1");
+		generate_option("objective.type","Objective Type","sort_by1");
+		generate_option("objective.map_type","Map","sort_by1");
+		generate_option("guild.guild_name","Guild Name","sort_by1");
+		generate_option("guild.guild_tag","Guild Tag","sort_by1");
+	echo "</select></td><td><td><select name=\"sort_by2\">";
+		generate_option("activity_data.match_id","Match ID","sort_by2");
+		generate_option("timeStamp","Time Stamp","sort_by2");
+		generate_option("last_flipped","Last Seized At","sort_by2");
+		generate_option("week_num","Week Number","sort_by2");
+		generate_option("server_info.name","Owner Server","sort_by2");
+		generate_option("owner_color","Owner Color","sort_by2");
+		generate_option("claimed_at","Claimed At","sort_by2");
+		generate_option("tick_timer","In-game Clock Time","sort_by2");
+		generate_option("objective.name","Objective Name","sort_by2");
+		generate_option("objective.type","Objective Type","sort_by2");
+		generate_option("objective.map_type","Map","sort_by2");
+		generate_option("guild.guild_name","Guild Name","sort_by2");
+		generate_option("guild.guild_tag","Guild Tag","sort_by2");
+		echo "</select></td><tr><td>Time Stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
 		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
@@ -150,7 +163,7 @@
 		{
 			$activityQuery .= "and guild_tag = \"" . $_GET["guild_tag"] . "\" ";
 		}
-		$activityQuery .= "ORDER BY " . $_GET["sort_by"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
+		$activityQuery .= "ORDER BY " . $_GET["sort_by1"] . "," . $_GET["sort_by2"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
 		//
 		//
 		//
