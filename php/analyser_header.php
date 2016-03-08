@@ -9,19 +9,18 @@
 	{
 		header("Location: logout.php?error=inv_cred"); //manually add a GET variable to tell the index-login page there was an error
 	}
+	function createButton($pageName,$buttonText)
+	{
+		echo "<td><form action=\"" . $pageName . "\">
+			<input type=\"submit\" value=\"" . $buttonText ."\">
+		</form></td>";
+	}
+	
 	echo "<table><tr>";
-	echo "<td><form action=\"activity_analyser.php\">
-		<input type=\"submit\" value=\"Activity Analyser\">
-		</form></td>";
-	echo "<td><form action=\"guild_analyser.php\">
-		<input type=\"submit\" value=\"Guild Analyser\">
-		</form></td>";
-	echo "<td><form action=\"map_score_analyser.php\">
-		<input type=\"submit\" value=\"Map Score Analyser\">
-		</form></td>";
-	echo "<td><form action=\"logout.php\" method=\"GET\">
-		<input type=\"submit\" value=\"Log out\"/>
-	</form></td>";
+	createButton("activity_analyser.php","Activity Analyser");
+	createButton("guild_analyser.php","Guild Analyser");
+	createButton("map_score_analyser.php","Map Score Analyser");
+	createButton("logout.php","Log Out");
 	echo "</tr></table><br/>";
 ?>
 <?php 
