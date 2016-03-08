@@ -1,3 +1,8 @@
+CREATE USER 'gw2analyser'@'localhost' IDENTIIFED BY 'passwordGoesHere';
+GRANT SELECT
+ON Gw2Analyser.*
+TO 'gw2analyser'@'localhost';
+
 CREATE TABLE objective
 (
  obj_id varchar(8),
