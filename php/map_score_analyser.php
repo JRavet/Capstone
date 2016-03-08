@@ -6,6 +6,8 @@
 	echo "<form action=\"map_score_analyser.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
+		generate_option("week_num,timeStamp,map_scores.match_id","Week Number, Time Stamp, Match ID","sort_by");
+		generate_option("week_num,map_scores.match_id,timeStamp","Week Number, Match ID, Time Stamp","sort_by");
 		generate_option("timeStamp","Time Stamp","sort_by");
 		generate_option("map_scores.match_id","Match ID","sort_by");
 		generate_option("week_num","Week Number","sort_by");
