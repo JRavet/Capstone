@@ -184,14 +184,44 @@
 			    echo "<td>" . $row["Match ID"] . "</td>";
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Server"] . "</td>";
-			    echo "<td>" . $row["Color"] . "</td>";
+			    echo "<td bgcolor=\"";
+			    if ($row["Color"] == "Green")
+			    {
+			    	echo "#00cc00";
+			    }
+			    else if ($row["Color"] == "Blue")
+			    {
+			    	echo "#3399ff";
+			    }
+			    else if ($row["Color"] == "Red")
+			    {
+			    	echo "#ff5050";
+			    }
+			    echo "\">" . $row["Color"] . "</td>";
 			    echo "<td>" . $row["Last Seized At"] . "</td>";
 			    echo "<td>" . $row["Claimed At"] . "</td>";
 			    echo "<td>" . $row["Ingame Clock"] . "</td>";
 			    echo "<td>" . $row["Objective Name"] . "</td>";
 			    echo "<td>" . $row["Objective Type"] . "</td>";
 			    echo "<td>" . $row["Cardinal Direction"] . "</td>";
-			    echo "<td>" . $row["Map"] . "</td>";
+			    echo "<td bgcolor=\"";
+			    if ($row["Map"] == "GreenHome")
+			    {
+			    	echo "#00cc00";
+			    }
+			    else if ($row["Map"] == "BlueHome")
+			    {
+			    	echo "#3399ff";
+			    }
+			    else if ($row["Map"] == "RedHome")
+			    {
+			    	echo "#ff5050";
+			    }
+			    else
+			    {
+			    	echo "yellow";
+			    }
+			    echo "\">" . $row["Map"] . "</td>";
 			    echo "<td>" . $row["Guild Name"] . "</td>";
 			    echo "<td>" . $row["Guild Tag"] . "</td>";
 			    echo "</tr>";
