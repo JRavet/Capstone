@@ -85,10 +85,11 @@
 		//
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Time Stamp</th><th>Green Deaths</th>
-		<th>Blue Deaths</th><th>Red Deaths</th><th>Green Kills</th><th>Blue Kills</th><th>Red Kills</th>
-		<th>Green Score</th><th>Blue Score</th><th>Red Score</th><th>Green PPT</th><th>Blue PPT</th>
-		<th>Red PPT</th><th>Green Server</th><th>Blue Server</th><th>Red Server</th><th>Errors Corrected</th>";
+		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Time Stamp</th><th>|</th><th>Green Kills</th><th>Blue Kills</th>
+		<th>Red Kills</th><th>Total Kills</th><th>|</th><th>Green Deaths</th>
+		<th>Blue Deaths</th><th>Red Deaths</th><th>Total Deaths</th><th>|</th>
+		<th>Green Score</th><th>Blue Score</th><th>Red Score</th><th>Total Score</th><th>|</th>
+		<th>Green PPT</th><th>Blue PPT</th><th>Red PPT</th><th>|</th><th>Green Server</th><th>Blue Server</th><th>Red Server</th><th>Errors Corrected</th>";
 		$i = 0;
 		$resultSet = $conn->query($scoreQuery);
 		foreach ($resultSet as $row)
@@ -101,18 +102,26 @@
 			    echo "<td>" . $row["Match ID"] . "</td>";
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Time Stamp"] . "</td>";
-			    echo "<td>" . $row["Green Deaths"] . "</td>";
-			    echo "<td>" . $row["Blue Deaths"] . "</td>";
-			    echo "<td>" . $row["Red Deaths"] . "</td>";
-			    echo "<td>" . $row["Green Kills"] . "</td>";
-			    echo "<td>" . $row["Blue Kills"] . "</td>";
-			    echo "<td>" . $row["Red Kills"] . "</td>";
-			    echo "<td>" . $row["Green Score"] . "</td>";
-			    echo "<td>" . $row["Blue Score"] . "</td>";
-			    echo "<td>" . $row["Red Score"] . "</td>";
-			    echo "<td>" . $row["Green PPT"] . "</td>";
-			    echo "<td>" . $row["Blue PPT"] . "</td>";
-			    echo "<td>" . $row["Red PPT"] . "</td>";
+			    echo "<td>|</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Kills"] . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Kills"] . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Kills"] . "</td>";
+			  	echo "<td>" . ($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "</td>";
+			  	echo "<td>|</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Deaths"] . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Deaths"] . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Deaths"] . "</td>";
+			  	echo "<td>" . ($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]) . "</td>";
+			  	echo "<td>|</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Score"] . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Score"] . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Score"] . "</td>";
+			  	echo "<td>" . ($row["Green Score"] + $row["Blue Score"] + $row["Red Score"]) . "</td>";
+			  	echo "<td>|</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . $row["Green PPT"] . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue PPT"] . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . $row["Red PPT"] . "</td>";
+			    echo "<td>|</td>";
 			    echo "<td>" . $row["Green Server"] . "</td>";
 			    echo "<td>" . $row["Blue Server"] . "</td>";
 			    echo "<td>" . $row["Red Server"] . "</td>";

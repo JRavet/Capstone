@@ -16,6 +16,10 @@
 			</td></tr>
 			<tr><td></td><td><input type="submit" value="Log In"></td></tr>
 		</table>
+		<p><b>Notice:</b> Currently, the login credentials do not matter</p>
+		<p>The pages automatically log in to the database with a low-privilege user</p>
+		<p>In the future(tm), you will log in with a personal username and password</p>
+	
 		<?php
 			if ($_GET["error"] == "inv_cred")
 			{
