@@ -211,6 +211,111 @@ void store_allObjectives(sql::Connection *dbCon)
 	}
 }
 /*
+string *SQLstmt		-> The SQLstmt to append a string to
+string server_name	-> The full name of the server
+
+This function takes the full name of a server and appends a short-hand name of it to the SQLstmt string
+*/
+void get_server_shortName(string * SQLstmt, string server_name)
+{
+	if (server_name == "Anvil Rock")
+	{
+		SQLstmt += ",\"AR\"";
+	}
+	else if (server_name == "Borlis Pass")
+	{
+		SQLstmt += ",\"BP\"";
+	}
+	else if (server_name == "Yak's Bend")
+	{
+		SQLstmt += ",\"YB\"";
+	}
+	else if (server_name == "Henge of Denravi")
+	{
+		SQLstmt += ",\"HoD\"";
+	}
+	else if (server_name == "Maguuma")
+	{
+		SQLstmt += ",\"Mag\"";
+	}
+	else if (server_name == "Sorrow's Furnace")
+	{
+		SQLstmt += ",\"SF\"";
+	}
+	else if (server_name == "Gate of Madness")
+	{
+		SQLstmt += ",\"GoM\"";
+	}
+	else if (server_name == "Jade Quarry")
+	{
+		SQLstmt += ",\"JQ\"";
+	}
+	else if (server_name == "Fort Aspenwood")
+	{
+		SQLstmt += ",\"FA\"";
+	}
+	else if (server_name == "Ehmry Bay")
+	{
+		SQLstmt += ",\"EBAY\"";
+	}
+	else if (server_name == "Stormbluff Isle")
+	{
+		SQLstmt += ",\"SBI\"";
+	}
+	else if (server_name == "Darkhaven")
+	{
+		SQLstmt += ",\"DH\"";
+	}
+	else if (server_name == "Sanctum of Rall")
+	{
+		SQLstmt += ",\"SoR\"";
+	}
+	else if (server_name == "Crystal Desert")
+	{
+		SQLstmt += ",\"CD\"";
+	}
+	else if (server_name == "Isle of Janthir")
+	{
+		SQLstmt += ",\"IoJ\"";
+	}
+	else if (server_name == "Sea of Sorrows")
+	{
+		SQLstmt += ",\"SoS\"";
+	}
+	else if (server_name == "Tarnished Coast")
+	{
+		SQLstmt += ",\"TC\"";
+	}
+	else if (server_name == "Northern Shiverpeaks")
+	{
+		SQLstmt += ",\"NSP\"";
+	}
+	else if (server_name == "Blackgate")
+	{
+		SQLstmt += ",\"BG\"";
+	}
+	else if (server_name == "Ferguson's Crossing")
+	{
+		SQLstmt += ",\"FC\"";
+	}
+	else if (server_name == "Dragonbrand")
+	{
+		SQLstmt += ",\"DB\"";
+	}
+	else if (server_name == "Devona's Rest")
+	{
+		SQLstmt += ",\"DR\"";
+	}
+	else if (server_name == "Eredon Terrace")
+	{
+		SQLstmt += ",\"ET\"";
+	}
+	else
+	{
+		SQLstmt += ",\"\""; //no shorthand name; includes Kaineng and EU servers
+	}
+}
+/*
 const Json::Value *server	-> The parsed Json containing a single server-info's data
 sql::Connection *dbCon		-> The SQL connection to be used to create and execute statements
 
@@ -225,6 +330,7 @@ void store_serverInfo(const Json::Value *server, sql::Connection *dbCon)
 	SQLstmt += "VALUES(";
 	convertNumToString(&converter,((*server)["id"].asInt()),&SQLstmt);
 	SQLstmt += ",\"" + (*server)["name"].asString() + "\"";
+	get_server_shortName(&SQLstmt,(*server)["name"].asString());
 	SQLstmt += ");";
 	//
 	try
