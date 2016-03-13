@@ -50,8 +50,8 @@
 		INNER JOIN server_info ON activity_data.owner_server = server_info.srv_id
 		INNER JOIN objective ON activity_data.obj_id=objective.obj_id
 		INNER JOIN guild ON guild.guild_id = activity_data.guild_id
-		INNER JOIN (SELECT match_id, week_num FROM match_details GROUP BY match_id) as match_details on match_details.match_id=activity_data.match_id
-		WHERE guild_name!=\"\" "; //automatically eliminate any activity-data without a guild claim
+		INNER JOIN match_details on match_details.match_id=activity_data.match_id
+		WHERE match_details.start_time = activity_data.start_time and guild_name!=\"\" "; //automatically eliminate any activity-data without a guild claim
 		if (
 			$_GET["match_id"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
