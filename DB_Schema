@@ -1,7 +1,5 @@
-CREATE USER 'gw2analyser'@'localhost' IDENTIIFED BY 'passwordGoesHere';
-GRANT SELECT
-ON Gw2Analyser.*
-TO 'gw2analyser'@'localhost';
+CREATE DATABASE Gw2Analyser;
+USE Gw2Analyser;
 
 CREATE TABLE objective
 (
@@ -96,6 +94,8 @@ CREATE TABLE activity_data
  match_id varchar(4),
  start_time datetime,
  timeStamp datetime,
+ duration_owned time,
+ duration_claimed time,
  PRIMARY KEY(last_flipped,obj_id,owner_server,guild_id),
  FOREIGN KEY(match_id,start_time) references match_details(match_id,start_time)
  ON DELETE CASCADE,
@@ -112,3 +112,8 @@ CREATE TABLE user
  password char(40),
  PRIMARY KEY(name)
 );
+
+CREATE USER 'gw2analyser'@'localhost' IDENTIIFED BY 'themirrorimage';
+GRANT SELECT
+ON Gw2Analyser.*
+TO 'gw2analyser'@'localhost';
