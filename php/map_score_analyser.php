@@ -92,11 +92,38 @@
 		<th>Green PPT</th><th>Blue PPT</th><th>Red PPT</th><th>|</th><th>Green Server</th><th>Blue Server</th><th>Red Server</th><th>Errors Corrected</th>";
 		$i = 0;
 		$resultSet = $conn->query($scoreQuery);
+		$totalGrnKills=0;
+		$totalBluKills=0;
+		$totalRedKills=0;
+		//
+		$totalGrnDeaths=0;
+		$totalBluDeaths=0;
+		$totalRedDeaths=0;
+		//
+		$totalGrnPPT=0;
+		$totalBluPPT=0;
+		$totalRedPPT=0;
+		//
+		$count=0;
 		foreach ($resultSet as $row)
 		{
 			$i++;
 			if ($i < $offset_amount + 1)
 			{
+				$count++;
+				$totalGrnKills += $row["Green Kills"];
+				$totalBluKills += $row["Blue Kills"];
+				$totalRedKills += $row["Red Kills"];
+				//
+				$totalGrnDeaths += $row["Green Deaths"];
+				$totalBluDeaths += $row["Blue Deaths"];
+				$totalRedDeaths += $row["Red Deaths"];
+	
+				//
+				$totalGrnPPT += $row["Green PPT"];
+				$totalBluPPT += $row["Blue PPT"];
+				$totalRedPPT += $row["Red PPT"];
+				//
 			    echo "<tr>";
 			    echo "<td>" . $i . "</td>";
 			    echo "<td>" . $row["Match ID"] . "</td>";
@@ -133,10 +160,33 @@
 		{
 			die("Page number too high; data out of range.<p>");
 		}
+		echo "<tr><th></th><th></th><th></th><th></th><th>|</th><th>Green Kills Total</th><th>Blue Kills Total</th><th>Red Kills Total</th><th>Total Kills</th>
+		<th>|</th><th>Green Deaths Total</th><th>Blue Deaths Total</th><th>Red Deaths Total</th><th>Total Deaths</th>
+		<th>|</th><th></th><th></th><th></th><th></th><th>|</th><th>Avg Green PPT</th><th>Avg Blue PPT</th><th>Avg Red PPT</th><th>|</th></tr>";
+		echo "<tr><td></td><td></td><td></td><td></td><td>|</td>";
+		echo "<td bgcolor=\"#00cc00\">" . $totalGrnKills . "</td>";
+		echo "<td bgcolor=\"#3399ff\">" . $totalBluKills . "</td>";
+		echo "<td bgcolor=\"#ff5050\">" . $totalRedKills . "</td>";
+		echo "<td>" . ($totalGrnKills + $totalBluKills + $totalRedKills) . "</td>";
+		echo "<td>|</td>";
+		echo "<td bgcolor=\"#00cc00\">" . $totalGrnDeaths . "</td>";
+		echo "<td bgcolor=\"#3399ff\">" . $totalBluDeaths . "</td>";
+		echo "<td bgcolor=\"#ff5050\">" . $totalRedDeaths . "</td>";
+		echo "<td>" . ($totalGrnDeaths + $totalBluDeaths + $totalRedDeaths) . "</td>";
+		echo "<td>|</td><td></td><td></td><td></td><td></td><td>|</td>";
+		echo "<td bgcolor=\"#00cc00\">" . (int)($totalGrnPPT/$count) . "</td>";
+		echo "<td bgcolor=\"#3399ff\">" . (int)($totalBluPPT/$count) . "</td>";
+		echo "<td bgcolor=\"#ff5050\">" . (int)($totalRedPPT/$count) . "</td>";
+		echo "<td>|</td>";
+		
+		echo " </tr>";
 		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
 		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
 		echo "</table>";
+		echo "<p>Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
+		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
+		. ($i + ($_GET["offset_num"])*$offset_amount) . ".</p>";
 	?>
 	</body>
 </html>
