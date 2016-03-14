@@ -32,6 +32,7 @@ CREATE TABLE server_info
 (
  srv_id int(4),
  name varchar(30),
+ shortName varchar(10),
  PRIMARY KEY(srv_id)
 );
 
