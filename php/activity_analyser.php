@@ -170,7 +170,7 @@
 		echo "<table border=\"1\">";
 		echo "<th>Row #</th><th>Time Stamp</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
 		<th>Last Seized At</th><th>Claimed At</th><th>Ingame Clock</th><th>Objective Name</th>
-		<th>Objective Type</th><th>Cardinal Direction</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
+		<th>Objective Type</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
 		$i = 0;
 		$resultSet = $conn->query($activityQuery);
 		foreach ($resultSet as $row)
@@ -202,8 +202,7 @@
 			    echo "<td>" . $row["Claimed At"] . "</td>";
 			    echo "<td>" . $row["Ingame Clock"] . "</td>";
 			    echo "<td>" . $row["Objective Name"] . "</td>";
-			    echo "<td>" . $row["Objective Type"] . "</td>";
-			    echo "<td>" . $row["Cardinal Direction"] . "</td>";
+			    echo "<td>" . $row["Cardinal Direction"] . " " . $row["Objective Type"] . "</td>";
 			    echo "<td bgcolor=\"";
 			    if ($row["Map"] == "GreenHome")
 			    {
