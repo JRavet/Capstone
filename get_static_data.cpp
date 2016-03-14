@@ -220,99 +220,99 @@ void get_server_shortName(string * SQLstmt, string server_name)
 {
 	if (server_name == "Anvil Rock")
 	{
-		SQLstmt += ",\"AR\"";
+		(*SQLstmt) += ",\"AR\"";
 	}
 	else if (server_name == "Borlis Pass")
 	{
-		SQLstmt += ",\"BP\"";
+		(*SQLstmt) += ",\"BP\"";
 	}
 	else if (server_name == "Yak's Bend")
 	{
-		SQLstmt += ",\"YB\"";
+		(*SQLstmt) += ",\"YB\"";
 	}
 	else if (server_name == "Henge of Denravi")
 	{
-		SQLstmt += ",\"HoD\"";
+		(*SQLstmt) += ",\"HoD\"";
 	}
 	else if (server_name == "Maguuma")
 	{
-		SQLstmt += ",\"Mag\"";
+		(*SQLstmt) += ",\"Mag\"";
 	}
 	else if (server_name == "Sorrow's Furnace")
 	{
-		SQLstmt += ",\"SF\"";
+		(*SQLstmt) += ",\"SF\"";
 	}
 	else if (server_name == "Gate of Madness")
 	{
-		SQLstmt += ",\"GoM\"";
+		(*SQLstmt) += ",\"GoM\"";
 	}
 	else if (server_name == "Jade Quarry")
 	{
-		SQLstmt += ",\"JQ\"";
+		(*SQLstmt) += ",\"JQ\"";
 	}
 	else if (server_name == "Fort Aspenwood")
 	{
-		SQLstmt += ",\"FA\"";
+		(*SQLstmt) += ",\"FA\"";
 	}
 	else if (server_name == "Ehmry Bay")
 	{
-		SQLstmt += ",\"EBAY\"";
+		(*SQLstmt) += ",\"EBAY\"";
 	}
 	else if (server_name == "Stormbluff Isle")
 	{
-		SQLstmt += ",\"SBI\"";
+		(*SQLstmt) += ",\"SBI\"";
 	}
 	else if (server_name == "Darkhaven")
 	{
-		SQLstmt += ",\"DH\"";
+		(*SQLstmt) += ",\"DH\"";
 	}
 	else if (server_name == "Sanctum of Rall")
 	{
-		SQLstmt += ",\"SoR\"";
+		(*SQLstmt) += ",\"SoR\"";
 	}
 	else if (server_name == "Crystal Desert")
 	{
-		SQLstmt += ",\"CD\"";
+		(*SQLstmt) += ",\"CD\"";
 	}
 	else if (server_name == "Isle of Janthir")
 	{
-		SQLstmt += ",\"IoJ\"";
+		(*SQLstmt) += ",\"IoJ\"";
 	}
 	else if (server_name == "Sea of Sorrows")
 	{
-		SQLstmt += ",\"SoS\"";
+		(*SQLstmt) += ",\"SoS\"";
 	}
 	else if (server_name == "Tarnished Coast")
 	{
-		SQLstmt += ",\"TC\"";
+		(*SQLstmt) += ",\"TC\"";
 	}
 	else if (server_name == "Northern Shiverpeaks")
 	{
-		SQLstmt += ",\"NSP\"";
+		(*SQLstmt) += ",\"NSP\"";
 	}
 	else if (server_name == "Blackgate")
 	{
-		SQLstmt += ",\"BG\"";
+		(*SQLstmt) += ",\"BG\"";
 	}
 	else if (server_name == "Ferguson's Crossing")
 	{
-		SQLstmt += ",\"FC\"";
+		(*SQLstmt) += ",\"FC\"";
 	}
 	else if (server_name == "Dragonbrand")
 	{
-		SQLstmt += ",\"DB\"";
+		(*SQLstmt) += ",\"DB\"";
 	}
 	else if (server_name == "Devona's Rest")
 	{
-		SQLstmt += ",\"DR\"";
+		(*SQLstmt) += ",\"DR\"";
 	}
 	else if (server_name == "Eredon Terrace")
 	{
-		SQLstmt += ",\"ET\"";
+		(*SQLstmt) += ",\"ET\"";
 	}
 	else
 	{
-		SQLstmt += ",\"\""; //no shorthand name; includes Kaineng and EU servers
+		(*SQLstmt) += ",\"\""; //no shorthand name; includes Kaineng and EU servers
 	}
 }
 /*
@@ -374,7 +374,7 @@ void store_allServerInfo(sql::Connection *dbCon)
 			store_srv_stmt = dbCon->createStatement(); //create a SQL statement
 			try
 			{ //manually store a server with an id of 0 and a name of "Neutral"
-				store_srv_stmt->execute("INSERT INTO server_info VALUES(0,\"Neutral\");");
+				store_srv_stmt->execute("INSERT INTO server_info VALUES(0,\"Neutral\",\"\");");
 			}
 			catch (sql::SQLException &e)
 			{
