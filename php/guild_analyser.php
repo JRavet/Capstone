@@ -13,7 +13,12 @@
 		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
-		<tr><td>Owner color: </td><td><input type=\"text\" name=\"owner_color\" value=\"" . $_GET["owner_color"] . "\"/></td></tr>
+		<tr><td>Owner color:</td><td><select name=\"owner_color\">";
+		generate_option("","","owner_color");
+		generate_option("Green","Green","owner_color");
+		generate_option("Blue","Blue","owner_color");
+		generate_option("Red","Red","owner_color");
+		echo "</select></td></tr>
 		<tr><td>Last seized: </td><td><input type=\"datetime\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"datetime\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
 		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
@@ -21,7 +26,13 @@
 		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Objective name: </td><td><input type=\"text\" name=\"obj_name\" value=\"" . $_GET["obj_name"] . "\"/></td></tr>
-		<tr><td>Objective type: </td><td><input type=\"text\" name=\"obj_type\" value=\"" . $_GET["obj_type"] . "\"/></td></tr>
+		<tr><td>Objective type: </td><td><select name=\"obj_type\">";
+		generate_option("","","obj_type");
+		generate_option("Camp","Camp","obj_type");
+		generate_option("Tower","Tower","obj_type");
+		generate_option("Keep","Keep","obj_type");
+		generate_option("Castle","Castle","obj_type");
+		echo "</select></td></tr>
 		<tr><td>Map type: </td><td><select name=\"map_type\">";
 		generate_option("","All Maps","map_type");
 		generate_option("center","Eternal Battlegrounds","map_type");
@@ -73,7 +84,14 @@
 		}
 		if ($_GET["obj_owner"] != "")
 		{
-			$guildClaimQuery .= "and server_info.name LIKE \"%" . $_GET["obj_owner"] . "%\" ";
+			if (strlen($_GET["obj_owner"]) < 4)
+			{
+				$activityQuery .= "and server_info.shortName = \"" . $_GET["obj_owner"] . "\" ";
+			}
+			else
+			{
+				$activityQuery .=  "and server_info.name LIKE \"%" . $_GET["obj_owner"] . "%\" ";
+			}
 		}
 		if ($_GET["owner_color"] != "")
 		{
