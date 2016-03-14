@@ -252,6 +252,9 @@
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
 		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
 		echo "</table>";
-	?>
+		echo "<p>Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
+		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
+		. ($i + ($_GET["offset_num"])*$offset_amount) . ".</p>";
+		?>
 	</body>
 </html>
