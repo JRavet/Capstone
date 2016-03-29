@@ -235,15 +235,15 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 /* */
 void get_weekNumber(string *weekNum, string match_time)
 { //TODO: make use of current match_time!
-	time_t currentTime;
-	struct tm * currentTime_tm;
+	struct tm * matchTime_tm;
 	char weekNumber[3]; //2 characters + the null-character
 	//
-	//strptime("%Y-%m-%dT%H:%M:%SZ")
-	time(&currentTime); //get the current time
-	currentTime_tm = localtime(&currentTime); //convert current time to  the struct version
-	strftime (weekNumber,3,"%U",currentTime_tm); //get the weeknumber and store it in the character array
-	(*weekNum) = weekNumber;
+	struct tm match_start;
+	strptime(match_time.c_str(), "%Y-%m-%dT%H:%M:%SZ", &match_start); //parses a string into a 'tm' struct
+	time_t t = mktime(&match_start); //converts a 'tm' struct to a time_t
+	matchTime_tm = localtime(&t); //converts given time to local time
+	strftime (weekNumber,3,"%U",matchTime_tm); //get the weeknumber and store it in the character array
+	(*weekNum) = weekNumber; //append the week number to the return-string
 }
 /* */
 void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con)
@@ -379,7 +379,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     SQLstmt += ",";
     convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][THIRD_SRV].asInt()),&SQLstmt);
     SQLstmt += ",";
-    //
+    //TODO: if new_data < old_data, locate last non-error'd data set, and append new value to old value
     if (((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt()) == 0
     && ((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt()) == 0
     && ((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt()) == 0)
