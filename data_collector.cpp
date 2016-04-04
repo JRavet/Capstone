@@ -17,6 +17,7 @@
 #include "mysql_driver.h"
 //timing
 #include <ctime>
+//multithreading
 //
 #define FIRST_SRV "green"
 #define SECOND_SRV "blue"
@@ -101,18 +102,25 @@ void check_guildClaim(string guildID, sql::Connection *con)
 /* */
 void compare_timeStamps(string time1, string time2, string *return_string, stringstream *converter)
 { //time1 > time2
-//TODO
-	//
 	struct tm current,previous;
-	strptime(time1.c_str(), "%Y-%m-%dT%H:%M:%SZ", &current); //parses a string into a 'tm' struct
-	strptime(time2.c_str(), "%Y-%m-%dT%H:%M:%SZ", &previous); //parses a string into a 'tm' struct
+	strptime(time1.c_str(), "%Y-%m-%dT%H:%M:%SZ", &current); //parses a string into a 'tm' struct; using the API's format
+	strptime(time2.c_str(), "%Y-%m-%d %H:%M:%S ", &previous); //parses a string into a 'tm' struct; using a SQL date-time format
 	time_t t1 = mktime(&current); //converts a 'tm' struct to a time_t
 	time_t t2 = mktime(&previous); //converts a 'tm' struct to a time_t
-	(*return_string) = "";
-	convertNumToString(converter,(difftime(t2,t1)/MICROSEC),return_string);
-} //TODO
+	(*return_string) = ""; //clear the return string for new input
+	int totalSeconds = difftime(t1,t2); //the total time elapsed between timestamps
+	int seconds=0,minutes=0,hours=0; //the 'parsed' seconds/minutes/hours
+	seconds = totalSeconds % 60;
+	minutes = (int) ((totalSeconds / 60) % 60);
+	hours = (int) ((totalSeconds / 3600) % 60);
+	convertNumToString(converter,hours,return_string); //append the hours elapsed to the return string
+	(*return_string) += ":";
+	convertNumToString(converter,minutes,return_string); //append the minutes elapsed to the return string
+	(*return_string) += ":";
+	convertNumToString(converter,seconds,return_string); //append the seconds elapsed to the return string
+}
 /* */
-void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con)
+void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con, const struct tm *UTCTime)
 {
 	string updateStmt = "";
 	stringstream converter;
@@ -143,9 +151,26 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0)
 			{ //if the previous duration claimed is NOT "0000-00-00 00:00:00" (ie, it was claimed)
 				//calculate claim duration
-				compare_timeStamps((*objective)["claimed_at"].asString(), previous_claimed_at, &duration_claimed, &converter);
+				string time_claimed = "";
+				convertNumToString(&converter,((*UTCTime).tm_year + 1900),&time_claimed);
+				time_claimed += "-";
+				convertNumToString(&converter,((*UTCTime).tm_mon + 1),&time_claimed);
+				time_claimed += "-";
+				convertNumToString(&converter,((*UTCTime).tm_mday),&time_claimed);
+				time_claimed += "T";
+				convertNumToString(&converter,((*UTCTime).tm_hour),&time_claimed);
+				time_claimed += ":";
+				convertNumToString(&converter,((*UTCTime).tm_min),&time_claimed);
+				time_claimed += ":";
+				convertNumToString(&converter,((*UTCTime).tm_sec),&time_claimed);
+				time_claimed += "Z";
+				if ((*objective)["claimed_at"].asString().compare("") != 0) //TODO does not work;
+				{ //if the objective was re-claimed, don't use the timestamp to get claim duration; use the real data
+					time_claimed = (*objective)["claimed_at"].asString();
+				}
+				compare_timeStamps(time_claimed, previous_claimed_at, &duration_claimed, &converter);
 				updateRow = true;
-			} //TODO what if objective changes claimship but not ownership? update which row?
+			}
 			if (last_flipped != previous_last_flipped)
 			{ //if the objective has changed ownership since last time
 				//calculate owned duration
@@ -156,7 +181,6 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 			if (updateRow == true)
 			{
 				updateStmt = "UPDATE activity_data SET duration_claimed = \"" + duration_claimed + "\", duration_owned = \"" + duration_owned + "\" WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and start_time = \"" + start_time + "\" and obj_id = \"" + (*objective)["id"].asString() + "\" ORDER BY timeStamp DESC LIMIT 1;";
-				cout << updateStmt << endl;
 				stmt->execute(updateStmt);
 			}
 		}		
@@ -176,7 +200,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"];
 	for (int i = 0; i < (int)objectives.size(); i++)
 	{
-		//update_activityData(match_data,&objectives[i],con);
+		update_activityData(match_data,&objectives[i],con, UTCTime);
 		SQLstmt = "INSERT INTO activity_data VALUES(";
 		SQLstmt += "\"" + objectives[i]["last_flipped"].asString() + "\"";
 		SQLstmt += ",\"" + objectives[i]["id"].asString() + "\",";
@@ -634,7 +658,7 @@ void collect_data(string region) //1 = North American, 2 = European
 		time_t beginTime, endTime;
 		double elapsed_msecs;
 		double ingame_clock_time = 14.0*60.0;
-		sync_to_ingame_clock(region,0);
+		//sync_to_ingame_clock(region,0);
     	while (1)
 		{
 			beginTime = time(0);
