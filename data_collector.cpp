@@ -99,7 +99,76 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	delete res;
 }
 /* */
-void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, struct tm *UTCTime)
+void compare_timeStamps(string time1, string time2, string *return_string, stringstream *converter)
+{ //time1 > time2
+//TODO
+	//
+	struct tm current,previous;
+	strptime(time1.c_str(), "%Y-%m-%dT%H:%M:%SZ", &current); //parses a string into a 'tm' struct
+	strptime(time2.c_str(), "%Y-%m-%dT%H:%M:%SZ", &previous); //parses a string into a 'tm' struct
+	time_t t1 = mktime(&current); //converts a 'tm' struct to a time_t
+	time_t t2 = mktime(&previous); //converts a 'tm' struct to a time_t
+	(*return_string) = "";
+	convertNumToString(converter,(difftime(t2,t1)/MICROSEC),return_string);
+} //TODO
+/* */
+void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con)
+{
+	string updateStmt = "";
+	stringstream converter;
+	try
+	{
+		sql::Statement *stmt;
+		sql::ResultSet *res;
+		bool updateRow = false; //initialize to false; its true if there are any updates to be made
+		stmt = con->createStatement();
+		string previous_data_stmt = "SELECT last_flipped, claimed_at FROM activity_data WHERE";
+		previous_data_stmt += " match_id = \"" + (*match_data)["id"].asString() + "\"";
+			string start_time = (*match_data)["start_time"].asString();
+			start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
+			start_time.erase(19,1); // ^^
+			//
+			string last_flipped = (*objective)["last_flipped"].asString();
+			last_flipped[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
+			last_flipped.erase(19,1); // ^^
+		previous_data_stmt += " and start_time = \"" + start_time + "\"";
+		previous_data_stmt += " and obj_id = \"" + (*objective)["id"].asString() + "\" ORDER BY timeStamp DESC LIMIT 1;";
+		res = stmt->executeQuery(previous_data_stmt);
+		if (res->next())
+		{ //if there is a previous entry for the given objective
+			string duration_claimed = "00:00:00";
+			string duration_owned = "00:00:00";
+			string previous_claimed_at = res->getString("claimed_at");
+			string previous_last_flipped = res->getString("last_flipped");
+			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0)
+			{ //if the previous duration claimed is NOT "0000-00-00 00:00:00" (ie, it was claimed)
+				//calculate claim duration
+				compare_timeStamps((*objective)["claimed_at"].asString(), previous_claimed_at, &duration_claimed, &converter);
+				updateRow = true;
+			} //TODO what if objective changes claimship but not ownership? update which row?
+			if (last_flipped != previous_last_flipped)
+			{ //if the objective has changed ownership since last time
+				//calculate owned duration
+				compare_timeStamps((*objective)["last_flipped"].asString(), previous_last_flipped, &duration_owned, &converter);
+				updateRow = true;
+			}
+			//
+			if (updateRow == true)
+			{
+				updateStmt = "UPDATE activity_data SET duration_claimed = \"" + duration_claimed + "\", duration_owned = \"" + duration_owned + "\" WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and start_time = \"" + start_time + "\" and obj_id = \"" + (*objective)["id"].asString() + "\" ORDER BY timeStamp DESC LIMIT 1;";
+				cout << updateStmt << endl;
+				stmt->execute(updateStmt);
+			}
+		}		
+		delete stmt;
+		delete res;
+	}
+	catch (sql::SQLException &e)
+	{
+		cout << e.what() << endl;
+	}
+}
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, const struct tm *UTCTime)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -107,6 +176,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"];
 	for (int i = 0; i < (int)objectives.size(); i++)
 	{
+		//update_activityData(match_data,&objectives[i],con);
 		SQLstmt = "INSERT INTO activity_data VALUES(";
 		SQLstmt += "\"" + objectives[i]["last_flipped"].asString() + "\"";
 		SQLstmt += ",\"" + objectives[i]["id"].asString() + "\",";
@@ -127,11 +197,6 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		{
 			SQLstmt += "0"; //no PPT value
 		}
-		//TODO: time_owned / claimed
-		/*
-			if this.key != max(last_flipped).key
-			select max(last_flipped) from activity_data where match_id = "1-4" and obj_id = "38-2";
-		*/
 		check_guildClaim(objectives[i]["claimed_by"].asString(),con);
 		SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\",";
 		convertNumToString(&converter,ingame_clock_time,&SQLstmt);
@@ -139,7 +204,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		SQLstmt += ",\"" + objectives[i]["claimed_at"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
-		SQLstmt += ",NULL, NULL"; //TODO duration_ owned/claimed
+		SQLstmt += ",NULL, NULL"; //duration_ owned/claimed; updated at a later time
 		SQLstmt += ",\"";
 		convertNumToString(&converter,((*UTCTime).tm_year + 1900),&SQLstmt);
 		SQLstmt += "-";
@@ -234,7 +299,7 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 }
 /* */
 void get_weekNumber(string *weekNum, string match_time)
-{ //TODO: make use of current match_time!
+{
 	struct tm * matchTime_tm;
 	char weekNumber[3]; //2 characters + the null-character
 	//
@@ -351,7 +416,7 @@ void append_server_stats(string data, string *SQLstmt)
 	}
 	(*SQLstmt) += data;
 }
-void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, struct tm *UTCTime)
+void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, const struct tm *UTCTime)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -476,7 +541,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 			}
 			//get the current time in UTC format to pass later
 			time_t t = time(NULL); //get current local time
-			UTCTime = gmtime( & t ); //convert current time to UTC		
+			UTCTime = gmtime( & t ); //convert current time to UTC
 			for (int j = 0; j < (int)all_match_data.size(); j++)
 			{
 				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
@@ -486,7 +551,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 						store_activityData(&all_match_data[j], i, con, ingame_clock_time, UTCTime);
 						if (ingame_clock_time == 14)
 						{ //only store mapscore data every point-tally in-game
-							store_mapScores(&all_match_data[j], i, con,UTCTime);
+							store_mapScores(&all_match_data[j], i, con, UTCTime);
 						}
 					}
 				}
