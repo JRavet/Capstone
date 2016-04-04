@@ -130,7 +130,7 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 		sql::ResultSet *res;
 		bool updateRow = false; //initialize to false; its true if there are any updates to be made
 		stmt = con->createStatement();
-		string previous_data_stmt = "SELECT last_flipped, claimed_at FROM activity_data WHERE";
+		string previous_data_stmt = "SELECT last_flipped, claimed_at, guild_id FROM activity_data WHERE";
 		previous_data_stmt += " match_id = \"" + (*match_data)["id"].asString() + "\"";
 			string start_time = (*match_data)["start_time"].asString();
 			start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
@@ -148,8 +148,8 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 			string duration_owned = "00:00:00";
 			string previous_claimed_at = res->getString("claimed_at");
 			string previous_last_flipped = res->getString("last_flipped");
-			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0)
-			{ //if the previous duration claimed is NOT "0000-00-00 00:00:00" (ie, it was claimed)
+			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0 && res->getString("guild_id").compare((*objective)["claimed_by"].asString()) != 0) //TODO calculates every time
+			{ //if the previous duration claimed is NOT "0000-00-00 00:00:00" (ie, it was claimed) and there is a new claim on it
 				//calculate claim duration
 				string time_claimed = "";
 				convertNumToString(&converter,((*UTCTime).tm_year + 1900),&time_claimed);
@@ -164,7 +164,7 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 				time_claimed += ":";
 				convertNumToString(&converter,((*UTCTime).tm_sec),&time_claimed);
 				time_claimed += "Z";
-				if ((*objective)["claimed_at"].asString().compare("") != 0) //TODO does not work;
+				if ((*objective)["claimed_at"].asString().compare("") != 0)
 				{ //if the objective was re-claimed, don't use the timestamp to get claim duration; use the real data
 					time_claimed = (*objective)["claimed_at"].asString();
 				}
@@ -658,7 +658,7 @@ void collect_data(string region) //1 = North American, 2 = European
 		time_t beginTime, endTime;
 		double elapsed_msecs;
 		double ingame_clock_time = 14.0*60.0;
-		//sync_to_ingame_clock(region,0);
+		sync_to_ingame_clock(region,0);
     	while (1)
 		{
 			beginTime = time(0);
