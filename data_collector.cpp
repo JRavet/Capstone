@@ -475,11 +475,11 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	res = stmt->executeQuery("SELECT timeStamp, "FIRST_SRV"Kills, "SECOND_SRV"Kills, "THIRD_SRV"Kills, "FIRST_SRV"Deaths, "SECOND_SRV"Deaths, "THIRD_SRV"Deaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\" and error_corrected = 0 ORDER BY timeStamp DESC LIMIT 1;");
 	int firstKills,firstDeaths,secondKills,secondDeaths,thirdKills,thirdDeaths;
 	firstKills = ((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt());
-	secondKills = ((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt());
-	thirdKills = ((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt());
+	secondKills = ((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt());
+	thirdKills = ((*match_data)["maps"][mapNum]["kills"][THIRD_SRV].asInt());
 	firstDeaths = ((*match_data)["maps"][mapNum]["deaths"][FIRST_SRV].asInt());
-	secondDeaths = ((*match_data)["maps"][mapNum]["deaths"][FIRST_SRV].asInt());
-	thirdDeaths = ((*match_data)["maps"][mapNum]["deaths"][FIRST_SRV].asInt());
+	secondDeaths = ((*match_data)["maps"][mapNum]["deaths"][SECOND_SRV].asInt());
+	thirdDeaths = ((*match_data)["maps"][mapNum]["deaths"][THIRD_SRV].asInt());
 	//initialize these variables to the current data
 	if (res->next())
 	{ //if there was a previous data record with the specified restrictions
@@ -493,7 +493,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 			firstDeaths += res->getInt(FIRST_SRV"Deaths");
 			secondDeaths += res->getInt(SECOND_SRV"Deaths");
 			thirdDeaths += res->getInt(THIRD_SRV"Deaths");
-			errorCorrected = true;
+			errorCorrected = true; //mark the new row as error corrected
 		}
   	}
 	convertNumToString(&converter,firstKills,&SQLstmt);
