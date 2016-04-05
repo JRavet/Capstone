@@ -242,7 +242,7 @@ done #Finish iterating
 printf " Linking \n[$USERSTRING\n]\n" #Display to user what files are being linked
 echo " to ${EXE} ..." #and to what they are being linked to
 if [[ $1 != -*mp* ]]; then
-	g++ $COMPILEWALL -o ${EXE} ${LINKSTRING} -lcurl -lcurlpp -ljsoncpp -lmysqlcppconn #Link all compiled files into $EXE
+	g++ $COMPILEWALL -o ${EXE} ${LINKSTRING} -lcurl -lpthread -lcurlpp -ljsoncpp -lmysqlcppconn #Link all compiled files into $EXE
 	if [[ -e ${EXE} ]]; then
 		echo "Running ${EXE} ..." #Display to user that the EXE is going to be run
 		echo "-------${EXE} output below-------" #easy-see separator
