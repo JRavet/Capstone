@@ -1,0 +1,116 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry} %reduces margins
+\usepackage{float}
+%https://en.wikibooks.org/wiki/LaTeX/Floats,_Figures_and_Captions
+\begin{document}
+\part*{Table of Contents}
+\tableofcontents
+\pagebreak
+%%%%
+\part*{}
+\section{mySQL}
+	\subsection{General SQL Help}
+		\begin{itemize}
+			\item http://www.w3schools.com/sql/sql\_func\_last.asp
+			\subitem Selecting the last row of a query
+			\item http://blog.grio.com/2013/02/an-intro-to-resolving-duplicate-results-in-sql-queries.html
+			\subitem Resolving duplicate rows from a SQL query
+			\item http://www.padjo.org/tutorials/databases/sql-order-limit/
+			\subitem Limiting and offsetting SQL queries
+			\subitem http://stackoverflow.com/questions/255517/mysql-offset-infinite-rows
+			\subsubitem Maximum limit number, to make use of the offset parameter
+			\item http://dev.mysql.com/doc/refman/5.7/en/adding-users.html
+			\subitem Creating a new user for the mySQL DB
+		\end{itemize}
+\section{C++}
+	\subsection{cURLpp}
+	\subsubsection{Installation}
+	\begin{itemize}
+		\item https://github.com/jpbarrette/curlpp
+		\subitem Downloadable zip file
+		\item http://www.solomonson.com/content/error-while-loading-shared-libraries-libcurlppso0-cannot-open-shared-object-file-no-such-fil
+		\subitem sudo bash -c "echo /usr/local/lib/ > /etc/ld.so.conf.d/local.conf"
+		\subitem sudo /sbin/ldconfig
+		\end{itemize}
+	\subsubsection{Usage}
+		\begin{itemize}
+			\item http://stackoverflow.com/questions/6401100/to-get-response-using-curlpp
+			\subitem Capturing the response of a GET into a variable
+			\item http://stackoverflow.com/questions/8816817/cout-stringstream
+			\subitem Using contents of a stringstream
+		\end{itemize}
+	\subsection{Jsoncpp}
+	\subsubsection{Installation}
+		\begin{itemize}
+			\item https://github.com/open-source-parsers/jsoncpp
+		\end{itemize}
+	\subsubsection{Usage}
+		\begin{itemize}
+			\item http://jsoncpp.sourceforge.net/old.html
+		\end{itemize}
+	\subsection{mySQL Connector/C++}
+	\subsubsection{Installation}
+		\begin{itemize}
+			\item http://askubuntu.com/questions/165868/installing-mysql-connector-c
+		\end{itemize}
+	\subsubsection{Usage}
+		\begin{itemize}
+			\item http://stackoverflow.com/questions/3450464/undefined-reference-to-get-driver-instance/11879650\#11879650
+			\item https://dev.mysql.com/doc/connector-cpp/en/connector-cpp-examples-query.html
+			\item https://dev.mysql.com/doc/connector-cpp/en/connector-cpp-examples-complete-example-1.html
+			\item http://stackoverflow.com/questions/3024911/mysql-connector-c-get-driver-instance-is-not-a-member-of-sqlmysql
+			\item https://dev.mysql.com/doc/connector-cpp/en/connector-cpp-examples-prepared-statements.html
+				\subitem Prepared statements
+			\item https://dev.mysql.com/doc/connector-cpp/en/connector-cpp-examples-complete-example-1.html
+				\subitem Retrieving and using a resultset
+		\end{itemize}
+	\subsection{Misc}
+		\begin{itemize}
+			\item http://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
+			\subitem Finding elapsed (CPU) time to execute a set of commands
+			\item http://stackoverflow.com/questions/4184468/sleep-for-milliseconds
+			\subitem How to wait for X milliseconds
+			\item http://www.cplusplus.com/reference/string/string/erase/
+			\subitem Erasing a set of characters from a string
+			\item http://stackoverflow.com/questions/11213326/how-to-convert-a-string-variable-containing-time-to-time-t-type-in-c
+			\subitem Converting a string to a time
+			\item http://www.cplusplus.com/reference/ctime/strftime/
+			\subitem Determining the number of weeks in the current year
+			\item http://stackoverflow.com/questions/867135/how-to-find-the-difference-between-two-times-in-c
+			\subitem Obtaining the difference between two times
+			\item http://www.cs.cmu.edu/afs/cs/academic/class/15492-f07/www/pthreads.html
+			\subitem Multi-threading in C++ using the Linux OS
+			\item http://stackoverflow.com/questions/7949761/c-error-void-is-not-a-pointer-to-object-type
+			\subitem Resolving an issue related to multi-threading and using void pointers
+		\end{itemize}
+\section{PHP}
+	\begin{itemize}
+		\item http://www.tutorialspoint.com/php/
+		\subitem General PHP help
+		\item http://php.about.com/od/learnphp/ht/phpredirection.htm
+		\subitem Redirecting to a different url
+		\item http://www.w3schools.com/php/php\_mysql\_connect.asp
+		\subitem Connecting to a mySQL DB
+		\item http://php.net/manual/en/pdo.query.php
+		\subitem Using a PDO query
+		\item http://stackoverflow.com/questions/535020/tracking-the-script-execution-time-in-php
+		\subitem Getting the time it takes to execute a command in PHP
+		\item http://www.w3schools.com/PHP/php\_includes.asp
+		\subitem Including a header
+		\item http://www.w3schools.com/html/html\_form\_input\_types.asp
+		\subitem Different form types
+		\item http://php.net/manual/en/function.strlen.php
+		\subitem Getting the length of a string
+	\end{itemize}
+\section{Miscellaneous Tools}
+	\subsection{gitHub}
+	\begin{itemize}
+		\item https://www.digitalocean.com/community/tutorials/how-to-install-git-on-ubuntu-14-04
+		\subitem sudo apt-get install git
+		\subitem Already installed on system by default
+		\item https://www.linux.com/learn/tutorials/796387-beginning-git-and-github-for-linux-users/
+			\subitem Using github
+	\end{itemize}
+	\subsection{LaTeX}
+\end{document}
