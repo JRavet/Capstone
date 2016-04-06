@@ -644,12 +644,13 @@ void sync_to_ingame_clock(string region, double timeToSleep) //1 = NA, 2 = EU
 	}
 	/* */
 }
-//void *collect_data(void *ptr) //1 = North American, 2 = European
-void collect_data(string region)
+void *collect_data(void *ptr) //1 = North American, 2 = European
 {
 	try 
     {
-    	//string *region = (string *)(ptr);
+    	const char *args = (char *) ptr;
+    	string region = "";
+    	region += args;
     	sql::mysql::MySQL_Driver *driver;
 		sql::Connection *con;
 		sql::Statement *stmt;
@@ -662,7 +663,7 @@ void collect_data(string region)
 		time_t beginTime, endTime;
 		double elapsed_msecs;
 		double ingame_clock_time = 14.0*60.0;
-		sync_to_ingame_clock(region,0);
+		//sync_to_ingame_clock(region,0);
     	while (1)
 		{
 			beginTime = time(0);
@@ -707,15 +708,13 @@ void collect_data(string region)
 }
 int main (int argc, char *argv[])
 {
-	/*
-	pthread_t thread1, thread2;
-	char *message1 = "1";
-	char *message2 = "2";
-	pthread_create( &thread1, NULL, collect_data, (void*) message1);
-	pthread_create( &thread2, NULL, collect_data, (void*) message2);
-	pthread_join( thread1, NULL);
-	pthread_join( thread2, NULL);
-	*/
-	collect_data("1");
+	
+	pthread_t region1, region2;
+	const char *args1 = "1";
+	const char *args2 = "2";
+	pthread_create( &region1, NULL, collect_data, (void*) args1);
+	pthread_create( &region2, NULL, collect_data, (void*) args2);
+	pthread_join( region1, NULL);
+	pthread_join( region2, NULL);
 	return 0;
 }
