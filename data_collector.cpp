@@ -35,9 +35,6 @@ using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
-bool stored_matchDetails = false;
-bool connected = true; //TODO for the database connection
-bool force_resync = false;
 string previous_start_time = "";
 //TODO comment functions
 //TODO rename variables to be more descriptive
@@ -52,7 +49,7 @@ void convertNumToString(stringstream *converter, float valueToConvert, string *r
 	converter->clear();
 }
 /* */
-void check_guildClaim(string guildID, sql::Connection *con)
+void check_guildClaim(string guildID, sql::Connection *con, bool *force_resync)
 {
 	sql::Statement *stmt;
 	sql::ResultSet *res;
@@ -93,7 +90,7 @@ void check_guildClaim(string guildID, sql::Connection *con)
 		}
 		catch (exception &e)
 		{
-			force_resync = true;
+			(*force_resync) = true;
 			cout << e.what() << endl;
 		}
 	}
@@ -196,7 +193,7 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 		cout << e.what() << endl;
 	}
 }
-void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, const struct tm *UTCTime)
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, const struct tm *UTCTime, bool *force_resync)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -225,7 +222,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		{
 			SQLstmt += "0"; //no PPT value
 		}
-		check_guildClaim(objectives[i]["claimed_by"].asString(),con);
+		check_guildClaim(objectives[i]["claimed_by"].asString(),con,force_resync);
 		SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\",";
 		convertNumToString(&converter,ingame_clock_time,&SQLstmt);
 		SQLstmt += ",\"" + objectives[i]["owner"].asString() + "\"";
@@ -260,7 +257,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 	}
 }
 /* */
-void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLstmt)
+void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLstmt, bool *force_resync)
 {
 	Easy request;
 	stringstream result;
@@ -322,7 +319,7 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 	catch (exception &e)
 	{
 		cout << e.what() << endl;
-		force_resync = true;
+		(*force_resync) = true;
 	}
 }
 /* */
@@ -339,7 +336,7 @@ void get_weekNumber(string *weekNum, string match_time)
 	(*weekNum) = weekNumber; //append the week number to the return-string
 }
 /* */
-void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con)
+void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con, bool *force_resync)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -372,7 +369,7 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 				convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
 				SQLstmt += ",";
 				convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-				get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
+				get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt,force_resync);
 				SQLstmt += ");";
 				//
 				try
@@ -532,7 +529,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	delete stmt;
 }
 /* */
-void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time)
+void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time, bool *stored_matchDetails, bool *force_resync)
 { //region: 1 = NA, 2 = EU
 	Easy request;
 	stringstream matchDetails;
@@ -548,9 +545,9 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 		/* */
 		if (parser.parse(matchDetails.str(), all_match_data))
 		{
-			if (!stored_matchDetails)
+			if (!(*stored_matchDetails))
 			{
-				store_matchDetails(&all_match_data, region, con);
+				store_matchDetails(&all_match_data, region, con, force_resync);
 				for (int k = 0; k < (int)all_match_data.size(); k++)
 				{
 					if ((all_match_data[k]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
@@ -559,7 +556,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 						break;
 					}
 				}
-				stored_matchDetails = true;
+				(*stored_matchDetails) = true;
 			}
 			//get the current time in UTC format to pass later
 			time_t t = time(NULL); //get current local time
@@ -570,7 +567,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 				{
 					for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
 					{
-						store_activityData(&all_match_data[j], i, con, ingame_clock_time, UTCTime);
+						store_activityData(&all_match_data[j], i, con, ingame_clock_time, UTCTime, force_resync);
 						if (ingame_clock_time == 15)
 						{
 							//get ppt values
@@ -586,11 +583,11 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 	}
 	catch (exception &e)
 	{
-		force_resync = true;
+		(*force_resync) = true;
 		cout << e.what() << endl;
 	}
 }
-void sync_to_ingame_clock(string region, double timeToSleep) //1 = NA, 2 = EU
+void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchDetails) //1 = NA, 2 = EU
 {
 	Easy request;
 	stringstream matchDetails;
@@ -616,10 +613,10 @@ void sync_to_ingame_clock(string region, double timeToSleep) //1 = NA, 2 = EU
 			if (parser.parse(matchDetails.str(), score_data))
 			{
 				cout << "Syncing ..." << endl;
-				if (stored_matchDetails && score_data["start_time"].asString() != previous_start_time)
+				if ((*stored_matchDetails) && score_data["start_time"].asString() != previous_start_time)
 				{
 					cout << "NEW MATCH!" << endl;
-					stored_matchDetails = false;
+					(*stored_matchDetails) = false;
 				}
 				currentScore = score_data["scores"][FIRST_SRV].asInt() + score_data["scores"][SECOND_SRV].asInt() + score_data["scores"][THIRD_SRV].asInt();
 				if (currentScore >= (previousScore+635))
@@ -663,12 +660,14 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 		time_t beginTime, endTime;
 		double elapsed_msecs;
 		double ingame_clock_time = 14.0*60.0;
-		//sync_to_ingame_clock(region,0);
+		bool stored_matchDetails = false;
+		bool force_resync = false;
+		//sync_to_ingame_clock(region,0,&stored_matchDetails);
     	while (1)
 		{
 			beginTime = time(0);
 			cout << "Beginning " << ingame_clock_time/60.0 << endl;
-			get_matchDetails(region, con, ingame_clock_time/60.0);
+			get_matchDetails(region, con, ingame_clock_time/60.0,&stored_matchDetails,&force_resync);
 			cout << "Ending " << ingame_clock_time/60.0 << endl;
 			endTime = time(0);
 			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
@@ -679,13 +678,13 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 				cout << "Too much time elapsed! Resyncing" << endl;
 				elapsed_msecs = TIME_RES*MICROSEC-1;
 				ingame_clock_time = 14*60.0;
-				sync_to_ingame_clock(region,0);
+				sync_to_ingame_clock(region,0,&stored_matchDetails);
 				force_resync = false;
 			}
 			if (ingame_clock_time/TIME_RES == 15)
 			{
 				cout << "Sync-wait: " << (MICROSEC*0.75*TIME_RES - elapsed_msecs)/MICROSEC << endl;
-				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs); //resync to in-game clock every cycle
+				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs,&stored_matchDetails); //resync to in-game clock every cycle
 				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
 			else if (ingame_clock_time/TIME_RES <= 1)
@@ -705,6 +704,7 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 	{
 		cout << e.what() << endl;
 	}
+	return NULL;
 }
 int main (int argc, char *argv[])
 {
