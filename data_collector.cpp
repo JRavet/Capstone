@@ -18,6 +18,7 @@
 //timing
 #include <ctime>
 //multithreading
+#include <pthread.h>
 //
 #define FIRST_SRV "green"
 #define SECOND_SRV "blue"
@@ -100,9 +101,12 @@ void check_guildClaim(string guildID, sql::Connection *con)
 	delete res;
 }
 /* */
-void compare_timeStamps(string time1, string time2, string *return_string, stringstream *converter)
+void compare_timeStamps(string time1, string time2, string *return_string)
 { //time1 > time2
+	stringstream converter;
 	struct tm current,previous;
+	converter.str("");
+	converter.clear();
 	strptime(time1.c_str(), "%Y-%m-%dT%H:%M:%SZ", &current); //parses a string into a 'tm' struct; using the API's format
 	strptime(time2.c_str(), "%Y-%m-%d %H:%M:%S ", &previous); //parses a string into a 'tm' struct; using a SQL date-time format
 	time_t t1 = mktime(&current); //converts a 'tm' struct to a time_t
@@ -113,11 +117,11 @@ void compare_timeStamps(string time1, string time2, string *return_string, strin
 	seconds = totalSeconds % 60;
 	minutes = (int) ((totalSeconds / 60) % 60);
 	hours = (int) ((totalSeconds / 3600) % 60);
-	convertNumToString(converter,hours,return_string); //append the hours elapsed to the return string
+	convertNumToString(&converter,hours,return_string); //append the hours elapsed to the return string
 	(*return_string) += ":";
-	convertNumToString(converter,minutes,return_string); //append the minutes elapsed to the return string
+	convertNumToString(&converter,minutes,return_string); //append the minutes elapsed to the return string
 	(*return_string) += ":";
-	convertNumToString(converter,seconds,return_string); //append the seconds elapsed to the return string
+	convertNumToString(&converter,seconds,return_string); //append the seconds elapsed to the return string
 }
 /* */
 void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con, const struct tm *UTCTime)
@@ -168,13 +172,13 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 				{ //if the objective was re-claimed, don't use the timestamp to get claim duration; use the real data
 					time_claimed = (*objective)["claimed_at"].asString();
 				}
-				compare_timeStamps(time_claimed, previous_claimed_at, &duration_claimed, &converter);
+				compare_timeStamps(time_claimed, previous_claimed_at, &duration_claimed);
 				updateRow = true;
 			}
 			if (last_flipped != previous_last_flipped)
 			{ //if the objective has changed ownership since last time
 				//calculate owned duration
-				compare_timeStamps((*objective)["last_flipped"].asString(), previous_last_flipped, &duration_owned, &converter);
+				compare_timeStamps((*objective)["last_flipped"].asString(), previous_last_flipped, &duration_owned);
 				updateRow = true;
 			}
 			//
@@ -640,10 +644,12 @@ void sync_to_ingame_clock(string region, double timeToSleep) //1 = NA, 2 = EU
 	}
 	/* */
 }
-void collect_data(string region) //1 = North American, 2 = European
+//void *collect_data(void *ptr) //1 = North American, 2 = European
+void collect_data(string region)
 {
 	try 
     {
+    	//string *region = (string *)(ptr);
     	sql::mysql::MySQL_Driver *driver;
 		sql::Connection *con;
 		sql::Statement *stmt;
@@ -701,6 +707,15 @@ void collect_data(string region) //1 = North American, 2 = European
 }
 int main (int argc, char *argv[])
 {
+	/*
+	pthread_t thread1, thread2;
+	char *message1 = "1";
+	char *message2 = "2";
+	pthread_create( &thread1, NULL, collect_data, (void*) message1);
+	pthread_create( &thread2, NULL, collect_data, (void*) message2);
+	pthread_join( thread1, NULL);
+	pthread_join( thread2, NULL);
+	*/
 	collect_data("1");
 	return 0;
 }
