@@ -86,11 +86,11 @@
 		{
 			if (strlen($_GET["obj_owner"]) < 4)
 			{
-				$activityQuery .= "and server_info.shortName = \"" . $_GET["obj_owner"] . "\" ";
+				$guildClaimQuery .= "and server_info.shortName = \"" . $_GET["obj_owner"] . "\" ";
 			}
 			else
 			{
-				$activityQuery .=  "and server_info.name LIKE \"%" . $_GET["obj_owner"] . "%\" ";
+				$guildClaimQuery .=  "and server_info.name LIKE \"%" . $_GET["obj_owner"] . "%\" ";
 			}
 		}
 		if ($_GET["owner_color"] != "")
