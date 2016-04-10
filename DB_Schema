@@ -114,7 +114,11 @@ CREATE TABLE user
  PRIMARY KEY(name)
 );
 
-CREATE USER 'gw2analyser'@'localhost' IDENTIIFED BY 'themirrorimage';
+CREATE USER 'gw2analyser'@'localhost' IDENTIFIED BY 'themirrorimage';
 GRANT SELECT
 ON Gw2Analyser.*
 TO 'gw2analyser'@'localhost';
+CREATE USER 'gw2datacollector'@'localhost' IDENTIFIED BY 'egamirrorimeht';
+GRANT SELECT, INSERT, UPDATE
+ON Gw2Analyser.*
+TO 'gw2datacollector'@'localhost';

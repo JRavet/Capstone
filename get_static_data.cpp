@@ -21,7 +21,7 @@ using namespace Options;
 using namespace std;
 /* */
 #define IPADDR "tcp://127.0.0.1:3306"
-#define USERNAME "root"
+#define USERNAME "gw2datacollector"
 #define PASSWORD "egamirrorimeht"
 #define DATABASE "Gw2Analyser"
 /*
