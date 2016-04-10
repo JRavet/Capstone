@@ -35,7 +35,6 @@ using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
-string previous_start_time = "";
 //TODO comment functions
 //TODO rename variables to be more descriptive
 //TODO multithread
@@ -526,10 +525,11 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	{
 		cout << e.what() << endl;
 	}
+	delete res;
 	delete stmt;
 }
 /* */
-void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time, bool *stored_matchDetails, bool *force_resync)
+void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time, bool *stored_matchDetails, bool *force_resync, string *previous_start_time)
 { //region: 1 = NA, 2 = EU
 	Easy request;
 	stringstream matchDetails;
@@ -552,7 +552,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 				{
 					if ((all_match_data[k]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
 					{
-						previous_start_time = (all_match_data[k]["start_time"].asString());
+						(*previous_start_time) = (all_match_data[k]["start_time"].asString());
 						break;
 					}
 				}
@@ -560,7 +560,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 			}
 			//get the current time in UTC format to pass later
 			time_t t = time(NULL); //get current local time
-			UTCTime = gmtime( & t ); //convert current time to UTC
+			UTCTime = gmtime( &t ); //convert current time to UTC
 			for (int j = 0; j < (int)all_match_data.size(); j++)
 			{
 				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
@@ -587,7 +587,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 		cout << e.what() << endl;
 	}
 }
-void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchDetails) //1 = NA, 2 = EU
+void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchDetails, string *previous_start_time) //1 = NA, 2 = EU
 {
 	Easy request;
 	stringstream matchDetails;
@@ -612,8 +612,8 @@ void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchD
 			request.perform();
 			if (parser.parse(matchDetails.str(), score_data))
 			{
-				cout << "Syncing ..." << endl;
-				if ((*stored_matchDetails) && score_data["start_time"].asString() != previous_start_time)
+				cout << "Syncing ..." << region << endl;
+				if ((*stored_matchDetails) && score_data["start_time"].asString() != (*previous_start_time))
 				{
 					cout << "NEW MATCH!" << endl;
 					(*stored_matchDetails) = false;
@@ -662,29 +662,30 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 		double ingame_clock_time = 14.0*60.0;
 		bool stored_matchDetails = false;
 		bool force_resync = false;
-		//sync_to_ingame_clock(region,0,&stored_matchDetails);
+		string previous_start_time = "";
+		sync_to_ingame_clock(region,0,&stored_matchDetails,&previous_start_time);
     	while (1)
 		{
 			beginTime = time(0);
-			cout << "Beginning " << ingame_clock_time/60.0 << endl;
-			get_matchDetails(region, con, ingame_clock_time/60.0,&stored_matchDetails,&force_resync);
-			cout << "Ending " << ingame_clock_time/60.0 << endl;
+			cout << "Beginning " << ingame_clock_time/60.0 << "| region " << region << endl;
+			get_matchDetails(region, con, ingame_clock_time/60.0,&stored_matchDetails,&force_resync,&previous_start_time);
+			cout << "Ending " << ingame_clock_time/60.0 << "| region " << region << endl;
 			endTime = time(0);
 			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
-			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << endl;
-			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << endl;
+			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << "| region " << region<< endl;
+			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << "| region " << region << endl;
 			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
 			{
-				cout << "Too much time elapsed! Resyncing" << endl;
+				cout << "Too much time elapsed! Resyncing" << "| region " << region << endl;
 				elapsed_msecs = TIME_RES*MICROSEC-1;
 				ingame_clock_time = 14*60.0;
-				sync_to_ingame_clock(region,0,&stored_matchDetails);
+				sync_to_ingame_clock(region,0,&stored_matchDetails,&previous_start_time);
 				force_resync = false;
 			}
 			if (ingame_clock_time/TIME_RES == 15)
 			{
-				cout << "Sync-wait: " << (MICROSEC*0.75*TIME_RES - elapsed_msecs)/MICROSEC << endl;
-				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs,&stored_matchDetails); //resync to in-game clock every cycle
+				cout << "Sync-wait: " << (MICROSEC*0.60*TIME_RES - elapsed_msecs)/MICROSEC << "| region " << region << endl;
+				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs,&stored_matchDetails,&previous_start_time); //resync to in-game clock every cycle
 				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
 			else if (ingame_clock_time/TIME_RES <= 1)
