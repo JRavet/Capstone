@@ -12,7 +12,11 @@
 		generate_option("map_scores.match_id","Match ID","sort_by");
 		generate_option("week_num","Week Number","sort_by");
 	echo "</select></tr>
-		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
+		<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
+		generate_option("","","region");
+		generate_option("1","NA","region");
+		generate_option("2","EU","region");
+		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Time stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
@@ -53,16 +57,20 @@
 			INNER JOIN match_details ON map_scores.match_id = match_details.match_id
 			WHERE match_details.start_time = map_scores.start_time ";
 		if (
-			$_GET["match_id"] == "" and $_GET["week_num"] == "" and $_GET["timeStamp_begin"] == ""
-			and $_GET["timeStamp_end"] == "" and $_GET["map_type"] == ""
+			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["timeStamp_begin"] == ""
+			and $_GET["timeStamp_end"] == "" and $_GET["map_type"] == "" and $_GET["region"] == ""
 		)
 		{
 			die(""); //if the user did not enter any search criteria, stop early
 		}
 		check_inputs();
-		if ($_GET["match_id"] != "")
+		if ($_GET["region"] != "")
 		{
-			$scoreQuery .= "and map_scores.match_id = \"" . $_GET["match_id"] . "\" ";
+			$scoreQuery .= "and map_scores.match_id LIKE \"" . $_GET["region"] . "-%\" ";
+		}
+		if ($_GET["match_num"] != "")
+		{
+			$scoreQuery .= "and map_scores.match_id LIKE \"%-" . $_GET["match_num"] . "\" ";
 		}
 		if ($_GET["week_num"] != "")
 		{

@@ -10,7 +10,11 @@
 	generate_option("guild.guild_name","Guild Name","sort_by");
 	generate_option("guild.guild_tag","Guild Tag","sort_by");
 	echo "</select>
-		<tr><td>Match ID: </td><td><input type=\"text\" name=\"match_id\" value=\"" . $_GET["match_id"] . "\"/></td></tr> 
+		<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
+		generate_option("","","region");
+		generate_option("1","NA","region");
+		generate_option("2","EU","region");
+		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr>
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
 		<tr><td>Owner color:</td><td><select name=\"owner_color\">";
@@ -64,19 +68,23 @@
 		INNER JOIN match_details on match_details.match_id=activity_data.match_id
 		WHERE match_details.start_time = activity_data.start_time and guild_name!=\"\" "; //automatically eliminate any activity-data without a guild claim
 		if (
-			$_GET["match_id"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
+			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
 			and $_GET["claimed_at_begin"] == "" and $_GET["claimed_at_end"] == "" and $_GET["tick_timer_begin"] == ""
 			and $_GET["tick_timer_end"] == "" and $_GET["obj_name"] == "" and $_GET["obj_type"] == ""
-			and $_GET["map_type"] == "" and $_GET["guild_name"] == "" and $_GET["guild_tag"] == ""
+			and $_GET["map_type"] == "" and $_GET["guild_name"] == "" and $_GET["guild_tag"] == "" and $_GET["region"] == ""
 		) 
 		{
 			die(""); //if the user did not enter any search criteria, stop early
 		}
 		check_inputs();
-		if ($_GET["match_id"] != "")
+		if ($_GET["region"] != "")
 		{
-			$guildClaimQuery .= "and activity_data.match_id = \"" . $_GET["match_id"] . "\" ";
+			$guildClaimQuery .= "and activity_data.match_id LIKE \"" . $_GET["region"] . "-%\" ";
+		}
+		if ($_GET["match_num"] != "")
+		{
+			$guildClaimQuery .= "and activity_data.match_id LIKE \"%-" . $_GET["match_num"] . "\" ";
 		}
 		if ($_GET["week_num"] != "")
 		{
