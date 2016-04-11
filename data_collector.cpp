@@ -200,7 +200,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"];
 	for (int i = 0; i < (int)objectives.size(); i++)
 	{
-		update_activityData(match_data,&objectives[i],con, UTCTime);
+		update_activityData(match_data,&objectives[i],con,UTCTime);
 		SQLstmt = "INSERT INTO activity_data VALUES(";
 		SQLstmt += "\"" + objectives[i]["last_flipped"].asString() + "\"";
 		SQLstmt += ",\"" + objectives[i]["id"].asString() + "\",";
@@ -677,9 +677,7 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
 			{
 				cout << "Too much time elapsed! Resyncing" << "| region " << region << endl;
-				elapsed_msecs = TIME_RES*MICROSEC-1;
-				ingame_clock_time = 14*60.0;
-				sync_to_ingame_clock(region,0,&stored_matchDetails,&previous_start_time);
+				ingame_clock_time = 15*60.0;
 				force_resync = false;
 			}
 			if (ingame_clock_time/TIME_RES == 15)
