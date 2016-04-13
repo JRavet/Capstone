@@ -3,7 +3,7 @@
 	<title> Map Score Analyser </title>
 	<body>
 	<?php
-	echo "<form action=\"map_score_analyser.php\" method=\"GET\">
+	echo "<form action=\"map_score_table.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
 		generate_option("week_num,timeStamp,map_scores.match_id","Week Number, Time Stamp, Match ID","sort_by");
@@ -34,7 +34,7 @@
 	<tr>
 	<td><input type=\"submit\" value=\"Submit Query\"/></td><td style=\"width:175px\"></td>
 	</form></td>
-	<td><form action=\"map_score_analyser.php\">
+	<td><form action=\"map_score_table.php\">
 		<input type=\"submit\" value=\"Reset fields\"/>
 	</form></td>
 	</tr>
