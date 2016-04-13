@@ -680,13 +680,13 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 				ingame_clock_time = 15*60.0;
 				force_resync = false;
 			}
-			if (ingame_clock_time/TIME_RES == 15)
+			if (ingame_clock_time/60 == 15)
 			{
 				cout << "Sync-wait: " << (MICROSEC*0.60*TIME_RES - elapsed_msecs)/MICROSEC << "| region " << region << endl;
 				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs,&stored_matchDetails,&previous_start_time); //resync to in-game clock every cycle
 				elapsed_msecs = MICROSEC*TIME_RES-1;
 			}
-			else if (ingame_clock_time/TIME_RES <= 1)
+			else if (ingame_clock_time <= TIME_RES)
 			{
 				ingame_clock_time = 15*60.0 + TIME_RES; //15 minutes + TIME_RES because 1 TIME_RES is subtracted below
 			}
