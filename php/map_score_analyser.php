@@ -93,8 +93,8 @@
 		//
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Time Stamp</th><th>|</th><th>Green Kills</th><th>Blue Kills</th>
-		<th>Red Kills</th><th>Total Kills</th><th>|</th><th>Green Deaths</th>
+		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Time Stamp</th><th>|</th><th>Green Kills<p>KD Ratio</th><th>Blue Kills<p>KD Ratio</th>
+		<th>Red Kills<p>KD Ratio</th><th>Total Kills<p>KD Ratio</th><th>|</th><th>Green Deaths</th>
 		<th>Blue Deaths</th><th>Red Deaths</th><th>Total Deaths</th><th>|</th>
 		<th>Green Score</th><th>Blue Score</th><th>Red Score</th><th>Total Score</th><th>|</th>
 		<th>Green PPT</th><th>Blue PPT</th><th>Red PPT</th><th>|</th><th>Green Server</th><th>Blue Server</th><th>Red Server</th><th>Errors Corrected</th>";
@@ -138,20 +138,20 @@
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Time Stamp"] . "</td>";
 			    echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Kills"] . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Kills"] . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Kills"] . "</td>";
-			  	echo "<td>" . ($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "<p>" . number_format($row["Green Kills"]/$row["Green Deaths"],3) . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "<p>" . number_format($row["Blue Kills"]/$row["Blue Deaths"],3) . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "<p>" . number_format($row["Red Kills"]/$row["Red Deaths"],3) . "</td>";
+			  	echo "<td>" . number_format($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "<p>" . number_format(($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"])/($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]),3) . "</td>";
 			  	echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Deaths"] . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Deaths"] . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Deaths"] . "</td>";
-			  	echo "<td>" . ($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]) . "</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Deaths"]) . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Deaths"]) . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Deaths"]) . "</td>";
+			  	echo "<td>" . number_format($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]) . "</td>";
 			  	echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Score"] . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Score"] . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Score"] . "</td>";
-			  	echo "<td>" . ($row["Green Score"] + $row["Blue Score"] + $row["Red Score"]) . "</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Score"]) . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Score"]) . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Score"]) . "</td>";
+			  	echo "<td>" . number_format($row["Green Score"] + $row["Blue Score"] + $row["Red Score"]) . "</td>";
 			  	echo "<td>|</td>";
 			    echo "<td bgcolor=\"#00cc00\">" . $row["Green PPT"] . "</td>";
 			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue PPT"] . "</td>";
