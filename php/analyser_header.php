@@ -19,7 +19,8 @@
 	echo "<table><tr>";
 	createButton("activity_analyser.php","Activity Analyser");
 	createButton("guild_analyser.php","Guild Analyser");
-	createButton("map_score_analyser.php","Map Score Analyser");
+	createButton("map_score_table.php","Map Score Table");
+	createButton("map_score_graph.php","Map Score Graph");
 	createButton("logout.php","Log Out");
 	echo "</tr></table><br/>";
 ?>
