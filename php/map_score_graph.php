@@ -1,9 +1,38 @@
-<?php include 'analyser_header.php'; ?>
+<?php
+	include 'analyser_header.php';
+	
+?>
+<?php
+	function generate_jsontable($resultSet,$varNames)
+	{
+		$rows = array();
+		$table = array();
+		$table['cols'] = array(array('label' => 'Time Stamp', 'type' => 'string'));
+		foreach ($varNames as $v)
+		{
+			array_push($table['cols'],array('label' => $v, 'type' => 'number'));
+		}
+	    foreach($resultSet as $r)
+	    {
+			$temp = array();
+			$temp[] = array('v' => (string) $r['Time Stamp']);
+			foreach ($varNames as $v)
+			{
+				$temp[] = array('v' => (int) $r["$v"]);
+			}
+			$rows[] = array('c' => $temp);
+	    }
+		$table['rows'] = $rows;
+		return $jsonTable = json_encode($table);
+	}
+?>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <html>
 	<title> Map Score Analyser </title>
 	<body>
 	<?php
-	echo "<form action=\"map_score_analyser.php\" method=\"GET\">
+	echo "<form action=\"map_score_graph.php\" method=\"GET\">
 	<table>";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
 		generate_option("week_num,timeStamp,map_scores.match_id","Week Number, Time Stamp, Match ID","sort_by");
@@ -34,7 +63,7 @@
 	<tr>
 	<td><input type=\"submit\" value=\"Submit Query\"/></td><td style=\"width:175px\"></td>
 	</form></td>
-	<td><form action=\"map_score_analyser.php\">
+	<td><form action=\"map_score_graph.php\">
 		<input type=\"submit\" value=\"Reset fields\"/>
 	</form></td>
 	</tr>
@@ -42,7 +71,6 @@
 	?>
 	<br/>
 	<?php
-		$offset_amount = 500;
 		$scoreQuery = "SELECT map_scores.match_id as \"Match ID\", week_num as \"Week Number\",
 			timeStamp as \"Time Stamp\", sum(greenDeaths) as \"Green Deaths\",
 			sum(blueDeaths) as \"Blue Deaths\", sum(redDeaths) as \"Red Deaths\",
@@ -92,109 +120,42 @@
 		//
 		//
 		//
-		echo "<table border=\"1\">";
-		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Time Stamp</th><th>|</th><th>Green Kills<p>KD Ratio</th><th>Blue Kills<p>KD Ratio</th>
-		<th>Red Kills<p>KD Ratio</th><th>Total Kills<p>KD Ratio</th><th>|</th><th>Green Deaths</th>
-		<th>Blue Deaths</th><th>Red Deaths</th><th>Total Deaths</th><th>|</th>
-		<th>Green Score</th><th>Blue Score</th><th>Red Score</th><th>Total Score</th><th>|</th>
-		<th>Green PPT</th><th>Blue PPT</th><th>Red PPT</th><th>|</th><th>Green Server</th><th>Blue Server</th><th>Red Server</th><th>Errors Corrected</th>";
-		$i = 0;
 		$resultSet = $conn->query($scoreQuery);
-		$totalGrnKills=0;
-		$totalBluKills=0;
-		$totalRedKills=0;
-		//
-		$totalGrnDeaths=0;
-		$totalBluDeaths=0;
-		$totalRedDeaths=0;
-		//
-		$totalGrnPPT=0;
-		$totalBluPPT=0;
-		$totalRedPPT=0;
-		//
-		$count=0;
-		foreach ($resultSet as $row)
+		$resultSet = new ArrayIterator($resultSet->fetchAll());
+		$pptTable = generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT"));
+		$killsTable = generate_jsontable($resultSet,array("Green Kills","Blue Kills","Red Kills"));
+    ?>
+	<script type="text/javascript">
+		google.load('visualization', '1', {'packages':['corechart']});
+		google.setOnLoadCallback(drawChart);
+		function drawChart() 
 		{
-			$i++;
-			if ($i < $offset_amount + 1)
-			{
-				$count++;
-				$totalGrnKills += $row["Green Kills"];
-				$totalBluKills += $row["Blue Kills"];
-				$totalRedKills += $row["Red Kills"];
-				//
-				$totalGrnDeaths += $row["Green Deaths"];
-				$totalBluDeaths += $row["Blue Deaths"];
-				$totalRedDeaths += $row["Red Deaths"];
-	
-				//
-				$totalGrnPPT += $row["Green PPT"];
-				$totalBluPPT += $row["Blue PPT"];
-				$totalRedPPT += $row["Red PPT"];
-				//
-			    echo "<tr>";
-			    echo "<td>" . $i . "</td>";
-			    echo "<td>" . $row["Match ID"] . "</td>";
-			    echo "<td>" . $row["Week Number"] . "</td>";
-			    echo "<td>" . $row["Time Stamp"] . "</td>";
-			    echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "<p>" . number_format($row["Green Kills"]/$row["Green Deaths"],3) . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "<p>" . number_format($row["Blue Kills"]/$row["Blue Deaths"],3) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "<p>" . number_format($row["Red Kills"]/$row["Red Deaths"],3) . "</td>";
-			  	echo "<td>" . number_format($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "<p>" . number_format(($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"])/($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]),3) . "</td>";
-			  	echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Deaths"]) . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Deaths"]) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Deaths"]) . "</td>";
-			  	echo "<td>" . number_format($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]) . "</td>";
-			  	echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Score"]) . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Score"]) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Score"]) . "</td>";
-			  	echo "<td>" . number_format($row["Green Score"] + $row["Blue Score"] + $row["Red Score"]) . "</td>";
-			  	echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . $row["Green PPT"] . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue PPT"] . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . $row["Red PPT"] . "</td>";
-			    echo "<td>|</td>";
-			    echo "<td>" . $row["Green Server"] . "</td>";
-			    echo "<td>" . $row["Blue Server"] . "</td>";
-			    echo "<td>" . $row["Red Server"] . "</td>";
-			    echo "<td>" . $row["Errors Corrected"] . "</td>";
-			    echo "</tr>";
-			}
+			var data = new google.visualization.DataTable(<?=$pptTable?>);
+			var options = {
+				title: 'PPT Chart',
+				curve_type: 'function',
+				width: 800,
+				height: 600
+			};
+			new google.visualization.LineChart(document.getElementById('ppt_chart')).draw(data,options);
 		}
-		if ($i == 0 and $_GET["offset_num"] > 0)
+	</script>
+	<div id="ppt_chart"></div>
+	<script type="text/javascript">
+		google.load('visualization', '1', {'packages':['corechart']});
+		google.setOnLoadCallback(drawChart);
+		function drawChart() 
 		{
-			die("Page number too high; data out of range.<p>");
+			var data = new google.visualization.DataTable(<?=$killsTable?>);
+			var options = {
+				title: 'Kills Chart',
+				curve_type: 'function',
+				width: 800,
+				height: 600
+			};
+			new google.visualization.LineChart(document.getElementById('kills_chart')).draw(data,options);
 		}
-		echo "<tr><th></th><th></th><th></th><th></th><th>|</th><th>Green Kills Total</th><th>Blue Kills Total</th><th>Red Kills Total</th><th>Total Kills</th>
-		<th>|</th><th>Green Deaths Total</th><th>Blue Deaths Total</th><th>Red Deaths Total</th><th>Total Deaths</th>
-		<th>|</th><th></th><th></th><th></th><th></th><th>|</th><th>Avg Green PPT</th><th>Avg Blue PPT</th><th>Avg Red PPT</th><th>|</th></tr>";
-		echo "<tr><td></td><td></td><td></td><td></td><td>|</td>";
-		echo "<td bgcolor=\"#00cc00\">" . $totalGrnKills . "</td>";
-		echo "<td bgcolor=\"#3399ff\">" . $totalBluKills . "</td>";
-		echo "<td bgcolor=\"#ff5050\">" . $totalRedKills . "</td>";
-		echo "<td>" . ($totalGrnKills + $totalBluKills + $totalRedKills) . "</td>";
-		echo "<td>|</td>";
-		echo "<td bgcolor=\"#00cc00\">" . $totalGrnDeaths . "</td>";
-		echo "<td bgcolor=\"#3399ff\">" . $totalBluDeaths . "</td>";
-		echo "<td bgcolor=\"#ff5050\">" . $totalRedDeaths . "</td>";
-		echo "<td>" . ($totalGrnDeaths + $totalBluDeaths + $totalRedDeaths) . "</td>";
-		echo "<td>|</td><td></td><td></td><td></td><td></td><td>|</td>";
-		echo "<td bgcolor=\"#00cc00\">" . (int)($totalGrnPPT/$count) . "</td>";
-		echo "<td bgcolor=\"#3399ff\">" . (int)($totalBluPPT/$count) . "</td>";
-		echo "<td bgcolor=\"#ff5050\">" . (int)($totalRedPPT/$count) . "</td>";
-		echo "<td>|</td>";
-		
-		echo " </tr>";
-		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
-		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
-		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
-		echo "</table>";
-		echo "<p>Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
-		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
-		. ($i + ($_GET["offset_num"])*$offset_amount) . ".</p>";
-	?>
+	</script>
+	<div id="kills_chart"></div>
 	</body>
 </html>
