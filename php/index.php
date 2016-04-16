@@ -23,11 +23,15 @@
 		<?php
 			if ($_GET["error"] == "inv_cred")
 			{
-				echo "<p>Error! Incorrect username or password!</p>";
+				echo "<p>Incorrect username or password.</p>";
 			}
-			else if ($_GET["error"] == "not_avail")
+			else if ($_GET["error"] == "session_closed")
 			{
-				echo "<p>Error! That analyser is not yet available.</p>";
+				echo "<p>The current session has ended. Please log in again.</p>";
+			}
+			else if ($_GET["error"] == "db_err")
+			{
+				echo "<p>There was an error connecting to the database.</p>";
 			}
 		?>
 	</form>
