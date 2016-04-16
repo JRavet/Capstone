@@ -10,15 +10,13 @@
 			<tr><td>Analyser:</td><td>
 			<select name="analyser_type">
 				<option value="activity_analyser.php">Activity Analyser</option>
-				<option value="map_score_analyser.php">Map-score Analyser</option>
 				<option value="guild_analyser.php">Guild Analyser</option>
+				<option value="map_score_table.php">Map-score Table</option>
+				<option value="map_score_graph.php">Map-score Graphs</option>
 			</select>
 			</td></tr>
 			<tr><td></td><td><input type="submit" value="Log In"></td></tr>
 		</table>
-		<p><b>Notice:</b> Currently, the login credentials do not matter</p>
-		<p>The pages automatically log in to the database with a low-privilege user</p>
-		<p>In the future(tm), you will log in with a personal username and password</p>
 	
 		<?php
 			if ($_GET["error"] == "inv_cred")
