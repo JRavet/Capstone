@@ -35,11 +35,6 @@ using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
-//TODO comment functions
-//TODO rename variables to be more descriptive
-//TODO multithread
-//TODO calc weeknum
-/* */
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
 	(*converter) << valueToConvert;
@@ -120,7 +115,7 @@ void compare_timeStamps(string time1, string time2, string *return_string)
 	convertNumToString(&converter,seconds,return_string); //append the seconds elapsed to the return string
 }
 /* */
-void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con, const struct tm *UTCTime)
+void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con, string *current_time)
 {
 	string updateStmt = "";
 	stringstream converter;
@@ -148,21 +143,11 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 			string duration_owned = "00:00:00";
 			string previous_claimed_at = res->getString("claimed_at");
 			string previous_last_flipped = res->getString("last_flipped");
-			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0 && res->getString("guild_id").compare((*objective)["claimed_by"].asString()) != 0) //TODO calculates every time
+			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0 && res->getString("guild_id").compare((*objective)["claimed_by"].asString()) != 0)
 			{ //if the previous duration claimed is NOT "0000-00-00 00:00:00" (ie, it was claimed) and there is a new claim on it
 				//calculate claim duration
-				string time_claimed = "";
-				convertNumToString(&converter,((*UTCTime).tm_year + 1900),&time_claimed);
-				time_claimed += "-";
-				convertNumToString(&converter,((*UTCTime).tm_mon + 1),&time_claimed);
-				time_claimed += "-";
-				convertNumToString(&converter,((*UTCTime).tm_mday),&time_claimed);
-				time_claimed += "T";
-				convertNumToString(&converter,((*UTCTime).tm_hour),&time_claimed);
-				time_claimed += ":";
-				convertNumToString(&converter,((*UTCTime).tm_min),&time_claimed);
-				time_claimed += ":";
-				convertNumToString(&converter,((*UTCTime).tm_sec),&time_claimed);
+				string time_claimed = (*current_time);
+				time_claimed[9] = 'T';
 				time_claimed += "Z";
 				if ((*objective)["claimed_at"].asString().compare("") != 0)
 				{ //if the objective was re-claimed, don't use the timestamp to get claim duration; use the real data
@@ -192,7 +177,7 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 		cout << e.what() << endl;
 	}
 }
-void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, const struct tm *UTCTime, bool *force_resync)
+void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, string *current_time, bool *force_resync)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -200,7 +185,7 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"];
 	for (int i = 0; i < (int)objectives.size(); i++)
 	{
-		update_activityData(match_data,&objectives[i],con,UTCTime);
+		update_activityData(match_data,&objectives[i],con,current_time);
 		SQLstmt = "INSERT INTO activity_data VALUES(";
 		SQLstmt += "\"" + objectives[i]["last_flipped"].asString() + "\"";
 		SQLstmt += ",\"" + objectives[i]["id"].asString() + "\",";
@@ -229,20 +214,8 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
 		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
 		SQLstmt += ",NULL, NULL"; //duration_ owned/claimed; updated at a later time
-		SQLstmt += ",\"";
-		convertNumToString(&converter,((*UTCTime).tm_year + 1900),&SQLstmt);
-		SQLstmt += "-";
-		convertNumToString(&converter,((*UTCTime).tm_mon + 1),&SQLstmt);
-		SQLstmt += "-";
-		convertNumToString(&converter,((*UTCTime).tm_mday),&SQLstmt);
-		SQLstmt += " ";
-		convertNumToString(&converter,((*UTCTime).tm_hour),&SQLstmt);
-		SQLstmt += ":";
-		convertNumToString(&converter,((*UTCTime).tm_min),&SQLstmt);
-		SQLstmt += ":";
-		convertNumToString(&converter,((*UTCTime).tm_sec),&SQLstmt);
-		SQLstmt += "\"";
-		SQLstmt += ");";
+		SQLstmt += ",\"" + (*current_time);
+		SQLstmt += "\");";
 		try
 		{
 			stmt = con->createStatement();
@@ -440,7 +413,7 @@ void append_server_stats(string data, string *SQLstmt)
 	}
 	(*SQLstmt) += data;
 }
-void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, const struct tm *UTCTime)
+void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, string * current_time)
 {
 	stringstream converter;
 	sql::Statement *stmt;
@@ -449,17 +422,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	bool errorCorrected = false;
     //
     string SQLstmt = "INSERT INTO map_scores VALUES(\"";
-    convertNumToString(&converter,((*UTCTime).tm_year + 1900),&SQLstmt);
-    SQLstmt += "-";
-    convertNumToString(&converter,((*UTCTime).tm_mon + 1),&SQLstmt);
-    SQLstmt += "-";
-    convertNumToString(&converter,((*UTCTime).tm_mday),&SQLstmt);
-    SQLstmt += " ";
-    convertNumToString(&converter,((*UTCTime).tm_hour),&SQLstmt);
-    SQLstmt += ":";
-    convertNumToString(&converter,((*UTCTime).tm_min),&SQLstmt);
-    SQLstmt += ":";
-    convertNumToString(&converter,((*UTCTime).tm_sec),&SQLstmt);
+   	SQLstmt += (*current_time);
     SQLstmt += "\",\"" + (*match_data)["id"].asString() + "\"";
     SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
     SQLstmt += ",\"" + (*match_data)["maps"][mapNum]["type"].asString() + "\",";
@@ -532,7 +495,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time, bool *stored_matchDetails, bool *force_resync, string *previous_start_time)
 { //region: 1 = NA, 2 = EU
 	Easy request;
-	stringstream matchDetails;
+	stringstream matchDetails,converter;
 	Json::Value all_match_data;
 	Json::Reader parser;
 	struct tm * UTCTime;
@@ -561,20 +524,32 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 			//get the current time in UTC format to pass later
 			time_t t = time(NULL); //get current local time
 			UTCTime = gmtime( &t ); //convert current time to UTC
+			string current_time = "";
+			convertNumToString(&converter,(UTCTime->tm_year + 1900),&current_time);
+			current_time += "-";
+			convertNumToString(&converter,(UTCTime->tm_mon + 1),&current_time);
+			current_time += "-";
+			convertNumToString(&converter,(UTCTime->tm_mday),&current_time);
+			current_time += " ";
+			convertNumToString(&converter,(UTCTime->tm_hour),&current_time);
+			current_time += ":";
+			convertNumToString(&converter,(UTCTime->tm_min),&current_time);
+			current_time += ":";
+			convertNumToString(&converter,(UTCTime->tm_sec),&current_time);
 			for (int j = 0; j < (int)all_match_data.size(); j++)
 			{
 				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
 				{
 					for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
 					{
-						store_activityData(&all_match_data[j], i, con, ingame_clock_time, UTCTime, force_resync);
+						store_activityData(&all_match_data[j], i, con, ingame_clock_time, &current_time, force_resync);
 						if (ingame_clock_time == 15)
 						{
 							//get ppt values
 						}
 						if (ingame_clock_time == 14)
 						{ //only store mapscore data every point-tally in-game
-							store_mapScores(&all_match_data[j], i, con, UTCTime);
+							store_mapScores(&all_match_data[j], i, con, &current_time);
 						}
 					}
 				}
