@@ -110,7 +110,7 @@ CREATE TABLE activity_data
 CREATE TABLE user
 (
  name varchar(30),
- password char(40),
+ password varchar(255),
  PRIMARY KEY(name)
 );
 
