@@ -52,7 +52,10 @@
 			sum(green_ppt) as \"Green PPT\", sum(blue_ppt) as \"Blue PPT\",
 			sum(red_ppt) as \"Red PPT\", match_details.green_srv as \"Green Server\",
 			match_details.blue_srv as \"Blue Server\", match_details.red_srv as \"Red Server\",
-			sum(error_corrected) as \"Errors Corrected\"
+			sum(error_corrected) as \"Errors Corrected\",
+			sum(greenKills)/sum(greenDeaths) as \"Green KD\",
+			sum(blueKills)/sum(blueDeaths) as \"Blue KD\",
+			sum(redKills)/sum(redDeaths) as \"Red KD\"
 			FROM map_scores 
 			INNER JOIN match_details ON map_scores.match_id = match_details.match_id
 			WHERE match_details.start_time = map_scores.start_time ";
@@ -138,9 +141,9 @@
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Time Stamp"] . "</td>";
 			    echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "<p>" . number_format($row["Green Kills"]/$row["Green Deaths"],3) . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "<p>" . number_format($row["Blue Kills"]/$row["Blue Deaths"],3) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "<p>" . number_format($row["Red Kills"]/$row["Red Deaths"],3) . "</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "<p>" . number_format($row["Green KD"],3) . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "<p>" . number_format($row["Blue KD"],3) . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "<p>" . number_format($row["Red KD"],3) . "</td>";
 			  	echo "<td>" . number_format($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "<p>" . number_format(($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"])/($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]),3) . "</td>";
 			  	echo "<td>|</td>";
 			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Deaths"]) . "</td>";
