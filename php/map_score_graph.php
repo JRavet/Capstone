@@ -1,7 +1,4 @@
-<?php
-	include 'analyser_header.php';
-	
-?>
+<?php include 'analyser_header.php'; ?>
 <?php
 	function generate_jsontable($resultSet,$varNames)
 	{
@@ -24,6 +21,27 @@
 	    }
 		$table['rows'] = $rows;
 		return $jsonTable = json_encode($table);
+	}
+	function generate_googleChart($data,$title,$idName,$options)
+	{
+	echo "<script type=\"text/javascript\">
+	google.load('visualization', '1', {'packages':['corechart']});
+	google.setOnLoadCallback(drawChart);
+	function drawChart()
+	{
+		var data = new google.visualization.DataTable($data);
+		var options = {
+			title: \"$title\",
+			width: 600,
+			$options
+			height: 300,
+			legend: {position: 'bottom'},
+			colors: ['#00cc00','#3399ff','#ff5050']
+		};
+		new google.visualization.LineChart(document.getElementById('$idName')).draw(data,options);
+	}
+	</script>
+	<div id=\"$idName\"></div>";
 	}
 ?>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -80,7 +98,10 @@
 			sum(green_ppt) as \"Green PPT\", sum(blue_ppt) as \"Blue PPT\",
 			sum(red_ppt) as \"Red PPT\", match_details.green_srv as \"Green Server\",
 			match_details.blue_srv as \"Blue Server\", match_details.red_srv as \"Red Server\",
-			sum(error_corrected) as \"Errors Corrected\"
+			sum(error_corrected) as \"Errors Corrected\",
+			sum(greenKills)/sum(greenDeaths)*100.0 as \"Green KD%\",
+			sum(blueKills)/sum(blueDeaths)*100.0 as \"Blue KD%\",
+			sum(redKills)/sum(redDeaths)*100.0 as \"Red KD%\"
 			FROM map_scores 
 			INNER JOIN match_details ON map_scores.match_id = match_details.match_id
 			WHERE match_details.start_time = map_scores.start_time ";
@@ -122,40 +143,16 @@
 		//
 		$resultSet = $conn->query($scoreQuery);
 		$resultSet = new ArrayIterator($resultSet->fetchAll());
-		$pptTable = generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT"));
-		$killsTable = generate_jsontable($resultSet,array("Green Kills","Blue Kills","Red Kills"));
-    ?>
-	<script type="text/javascript">
-		google.load('visualization', '1', {'packages':['corechart']});
-		google.setOnLoadCallback(drawChart);
-		function drawChart() 
-		{
-			var data = new google.visualization.DataTable(<?=$pptTable?>);
-			var options = {
-				title: 'PPT Chart',
-				curve_type: 'function',
-				width: 800,
-				height: 600
-			};
-			new google.visualization.LineChart(document.getElementById('ppt_chart')).draw(data,options);
-		}
-	</script>
-	<div id="ppt_chart"></div>
-	<script type="text/javascript">
-		google.load('visualization', '1', {'packages':['corechart']});
-		google.setOnLoadCallback(drawChart);
-		function drawChart() 
-		{
-			var data = new google.visualization.DataTable(<?=$killsTable?>);
-			var options = {
-				title: 'Kills Chart',
-				curve_type: 'function',
-				width: 800,
-				height: 600
-			};
-			new google.visualization.LineChart(document.getElementById('kills_chart')).draw(data,options);
-		}
-	</script>
-	<div id="kills_chart"></div>
+		echo "<table><tr><td>";
+		generate_googleChart(generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT")),"PPT Chart","ppt_chart");
+		echo "</td><td>";
+		generate_googleChart(generate_jsontable($resultSet,array("Green Score","Blue Score","Red Score")),"Score Chart","score_chart");
+		echo "</td></tr><tr><td>";
+		generate_googleChart(generate_jsontable($resultSet,array("Green Kills","Blue Kills","Red Kills")),"Kills Chart","kills_chart");
+		echo "</td><td>";
+		generate_googleChart(generate_jsontable($resultSet,array("Green Deaths","Blue Deaths","Red Deaths")),"Death Chart","deaths_chart");
+		echo "</td></tr><tr><td>";
+		generate_googleChart(generate_jsontable($resultSet,array("Green KD%","Blue KD%","Red KD%")),"KD Ratio Chart","kd_chart");
+		?>
 	</body>
 </html>
