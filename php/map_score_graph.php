@@ -106,11 +106,10 @@
 			INNER JOIN match_details ON map_scores.match_id = match_details.match_id
 			WHERE match_details.start_time = map_scores.start_time ";
 		if (
-			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["timeStamp_begin"] == ""
-			and $_GET["timeStamp_end"] == "" and $_GET["map_type"] == "" and $_GET["region"] == ""
+			$_GET["match_num"] == "" or $_GET["week_num"] == "" or $_GET["region"] == ""
 		)
 		{
-			die(""); //if the user did not enter any search criteria, stop early
+			die("<b>Please specify a region, match number and week number.</eb>"); //if the user did not enter any search criteria, stop early
 		}
 		check_inputs();
 		if ($_GET["region"] != "")
@@ -143,6 +142,10 @@
 		//
 		$resultSet = $conn->query($scoreQuery);
 		$resultSet = new ArrayIterator($resultSet->fetchAll());
+		$redName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON red_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
+		$blueName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON blue_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
+		$greenName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON green_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
+		echo "<table><tr><td bgcolor=\"#ff5050\">" . $redName->fetchColumn() . "</td><td bgcolor=\"#3399ff\">". $blueName->fetchColumn() . "</td>" . "<td bgcolor=\"#00cc00\">" . $greenName->fetchColumn() . "</td></tr></table>";
 		echo "<table><tr><td>";
 		generate_googleChart(generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT")),"PPT Chart","ppt_chart");
 		echo "</td><td>";
