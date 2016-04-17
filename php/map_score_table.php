@@ -50,14 +50,17 @@
 			sum(redKills) as \"Red Kills\", sum(greenScore) as \"Green Score\",
 			sum(blueScore) as \"Blue Score\", sum(redScore) as \"Red Score\",
 			sum(green_ppt) as \"Green PPT\", sum(blue_ppt) as \"Blue PPT\",
-			sum(red_ppt) as \"Red PPT\", match_details.green_srv as \"Green Server\",
-			match_details.blue_srv as \"Blue Server\", match_details.red_srv as \"Red Server\",
+			sum(red_ppt) as \"Red PPT\", s3.name as \"Green Server\",
+			s2.name as \"Blue Server\", s1.name as \"Red Server\",
 			sum(error_corrected) as \"Errors Corrected\",
 			sum(greenKills)/sum(greenDeaths) as \"Green KD\",
 			sum(blueKills)/sum(blueDeaths) as \"Blue KD\",
 			sum(redKills)/sum(redDeaths) as \"Red KD\"
 			FROM map_scores 
 			INNER JOIN match_details ON map_scores.match_id = match_details.match_id
+			INNER JOIN server_info s1 ON s1.srv_id = red_srv
+			INNER JOIN server_info s2 ON s2.srv_id = blue_srv
+			INNER JOIN server_info s3 ON s3.srv_id = green_srv
 			WHERE match_details.start_time = map_scores.start_time ";
 		if (
 			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["timeStamp_begin"] == ""
