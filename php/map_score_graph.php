@@ -145,17 +145,17 @@
 		$redName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON red_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
 		$blueName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON blue_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
 		$greenName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON green_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
-		echo "<table><tr><td bgcolor=\"#ff5050\">" . $redName->fetchColumn() . "</td><td bgcolor=\"#3399ff\">". $blueName->fetchColumn() . "</td>" . "<td bgcolor=\"#00cc00\">" . $greenName->fetchColumn() . "</td></tr></table>";
+		echo "<table border=\"1\"><tr><td bgcolor=\"#ff5050\">" . $redName->fetchColumn() . "</td><td>|</td><td bgcolor=\"#3399ff\">". $blueName->fetchColumn() . "</td><td>|</td><td bgcolor=\"#00cc00\">" . $greenName->fetchColumn() . "</td></tr></table>";
 		echo "<table><tr><td>";
-		generate_googleChart(generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT")),"PPT Chart","ppt_chart");
+		generate_googleChart(generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT")),"PPT","ppt_chart");
 		echo "</td><td>";
-		generate_googleChart(generate_jsontable($resultSet,array("Green Score","Blue Score","Red Score")),"Score Chart","score_chart");
+		generate_googleChart(generate_jsontable($resultSet,array("Green Score","Blue Score","Red Score")),"Scores","score_chart");
 		echo "</td></tr><tr><td>";
-		generate_googleChart(generate_jsontable($resultSet,array("Green Kills","Blue Kills","Red Kills")),"Kills Chart","kills_chart");
+		generate_googleChart(generate_jsontable($resultSet,array("Green Kills","Blue Kills","Red Kills")),"Kills","kills_chart");
 		echo "</td><td>";
-		generate_googleChart(generate_jsontable($resultSet,array("Green Deaths","Blue Deaths","Red Deaths")),"Death Chart","deaths_chart");
+		generate_googleChart(generate_jsontable($resultSet,array("Green Deaths","Blue Deaths","Red Deaths")),"Deaths","deaths_chart");
 		echo "</td></tr><tr><td>";
-		generate_googleChart(generate_jsontable($resultSet,array("Green KD%","Blue KD%","Red KD%")),"KD Ratio Chart","kd_chart");
+		generate_googleChart(generate_jsontable($resultSet,array("Green KD%","Blue KD%","Red KD%")),"KD Ratio","kd_chart");
 		?>
 	</body>
 </html>
