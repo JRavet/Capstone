@@ -1,6 +1,7 @@
 <?php include 'analyser_header.php'; ?>
 <html>
 	<title> Guild Analyser </title>
+	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"guild_analyser.php\" method=\"GET\">

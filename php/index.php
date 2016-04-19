@@ -3,6 +3,7 @@
 ?>
 <html>
 	<title>GW2 Analyser Log In</title>
+	<style>body{background:#FFF;}</style>
 	<form action="forward_to_analyser.php" method="POST">
 		<table>
 			<tr><td>User name:</td><td><input type="text" name="username"></td></tr>

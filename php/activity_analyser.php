@@ -1,6 +1,7 @@
 <?php include 'analyser_header.php'; ?>
 <html>
 	<title> Activity Analyser </title>
+	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">

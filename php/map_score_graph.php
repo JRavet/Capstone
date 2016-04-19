@@ -48,6 +48,7 @@
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <html>
 	<title> Map Score Analyser </title>
+	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"map_score_graph.php\" method=\"GET\">

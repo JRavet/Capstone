@@ -1,6 +1,7 @@
 <?php include 'analyser_header.php'; ?>
 <html>
 	<title> Map Score Analyser </title>
+	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"map_score_table.php\" method=\"GET\">
