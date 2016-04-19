@@ -122,3 +122,7 @@ CREATE USER 'gw2datacollector'@'localhost' IDENTIFIED BY 'egamirrorimeht';
 GRANT SELECT, INSERT, UPDATE
 ON Gw2Analyser.*
 TO 'gw2datacollector'@'localhost';
+CREATE USER 'gw2admin'@'localhost' IDENTIFIED BY 'J0rDa1n';
+GRANT SELECT, INSERT, UPDATE, CREATE, DROP, ALTER, DELETE
+ON Gw2Analyser.*
+TO 'gw2admin'@'localhost';
