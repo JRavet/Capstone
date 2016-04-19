@@ -132,7 +132,7 @@
 		{
 			$scoreQuery .= "and timeStamp >= \"" . $_GET["timeStamp_begin"] . "\" ";
 		}
-		if ($_GET["last_flipped_end"] != "")
+		if ($_GET["timeStamp_end"] != "")
 		{
 			$scoreQuery .= "and timeStamp <= \"" . $_GET["timeStamp_end"] . "\" ";
 		}
@@ -145,7 +145,7 @@
 		$redName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON red_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
 		$blueName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON blue_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
 		$greenName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON green_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
-		echo "<table border=\"1\"><tr><td bgcolor=\"#ff5050\">" . $redName->fetchColumn() . "</td><td>|</td><td bgcolor=\"#3399ff\">". $blueName->fetchColumn() . "</td><td>|</td><td bgcolor=\"#00cc00\">" . $greenName->fetchColumn() . "</td></tr></table>";
+		echo "<center><table border=\"1\"><tr><td style=\"padding:8px\" bgcolor=\"#ff5050\">" . $redName->fetchColumn() . "</td><td>|</td><td style=\"padding:8px\" bgcolor=\"#3399ff\">". $blueName->fetchColumn() . "</td><td>|</td><td style=\"padding:8px\" bgcolor=\"#00cc00\">" . $greenName->fetchColumn() . "</td></tr></table></center>";
 		echo "<table><tr><td>";
 		generate_googleChart(generate_jsontable($resultSet,array("Green PPT","Blue PPT","Red PPT")),"PPT","ppt_chart");
 		echo "</td><td>";
