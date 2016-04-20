@@ -90,10 +90,10 @@ CREATE TABLE activity_data
  tick_timer float(3,1),
  owner_color enum("Blue","Red","Green","Neutral"),
  claimed_at datetime,
- duration_owned time,
- duration_claimed time,
  match_id varchar(4),
  start_time datetime,
+ duration_owned time,
+ duration_claimed time,
  timeStamp datetime,
  PRIMARY KEY(last_flipped,obj_id,owner_server,guild_id),
  FOREIGN KEY(match_id,start_time) references match_details(match_id,start_time)
