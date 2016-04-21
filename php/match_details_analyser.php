@@ -51,8 +51,8 @@
 		//
 		echo "<table border=\"1\">";
 		echo "<th>Match ID</th><th>Week Number</th>
-		<th>Start Time</th><th>End Time</th>
-		<th>Green Server<p>Population</th><th>Blue Server<p>Population</th><th>Red Server<p>Population</th>";
+		<th>Green Server<p>Population</th><th>Blue Server<p>Population</th><th>Red Server<p>Population</th>
+		<th>Start Time</th><th>End Time</th>";
 		$resultSet = $conn->query($matchQuery);
 		//
 		foreach ($resultSet as $row)
