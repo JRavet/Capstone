@@ -21,8 +21,9 @@
 			<input type=\"submit\" value=\"" . $buttonText ."\">
 		</form></td>";
 	}
-	
+	echo "<center><h1>GW2 Competitive Analytic Tool</h1></center>";
 	echo "<table><tr>";
+	createButton("match_details_analyser.php","Match Detail Analyser");
 	createButton("activity_analyser.php","Activity Analyser");
 	createButton("guild_analyser.php","Guild Analyser");
 	createButton("map_score_table.php","Map Score Table");
