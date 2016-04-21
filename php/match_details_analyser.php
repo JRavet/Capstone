@@ -47,30 +47,24 @@
 		{
 			$matchQuery .= "and week_num = \"" . $_GET["week_num"] . "\" ";
 		}
-		$matchQuery .= " ORDER BY week_num DESC,match_id ASC;";
-		//
-		//
+		$matchQuery .= " ORDER BY week_num DESC,match_id ASC LIMIT 68;";
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th>
+		echo "<th>Match ID</th><th>Week Number</th>
 		<th>Start Time</th><th>End Time</th>
 		<th>Green Server<p>Population</th><th>Blue Server<p>Population</th><th>Red Server<p>Population</th>";
-		$i = 0;
 		$resultSet = $conn->query($matchQuery);
 		//
 		foreach ($resultSet as $row)
 		{
-			$i++;
-			//
 			echo "<tr>";
-			echo "<td>" . $i . "</td>";
 			echo "<td>" . $row["Match ID"] . "</td>";
 			echo "<td>" . $row["Week Number"] . "</td>";
+			echo "<td bgcolor=\"#00cc00\"><center>" . $row["Green Server"] . "<p>" . $row["Green Population"] . "</center></td>";
+			echo "<td bgcolor=\"#3399ff\"><center>" . $row["Blue Server"] . "<p>" . $row["Blue Population"] . "</center></td>";
+			echo "<td bgcolor=\"#ff5050\"><center>" . $row["Red Server"] . "<p>" . $row["Red Population"] . "</center></td>";
 			echo "<td>" . $row["Start Time"] . "</td>";
 			echo "<td>" . $row["End Time"] . "</td>";
-			echo "<td bgcolor=\"#00cc00\">" . $row["Green Server"] . "<p>" . $row["Green Population"] . "</td>";
-			echo "<td bgcolor=\"#3399ff\">" . $row["Blue Server"] . "<p>" . $row["Blue Population"] . "</td>";
-			echo "<td bgcolor=\"#ff5050\">" . $row["Red Server"] . "<p>" . $row["Red Population"] . "</td>";
 			echo "</tr>";
 		}
 		echo "</table>";

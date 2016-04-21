@@ -11,6 +11,7 @@
 			<tr><td>Password:</td><td><input type="password" name="password"></td></tr>
 			<tr><td>Analyser:</td><td>
 			<select name="analyser_type">
+				<option value="match_details_analyser.php">Match Details Analyser</option>
 				<option value="activity_analyser.php">Activity Analyser</option>
 				<option value="guild_analyser.php">Guild Analyser</option>
 				<option value="map_score_table.php">Map-score Table</option>
