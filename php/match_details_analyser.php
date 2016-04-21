@@ -60,9 +60,9 @@
 			echo "<tr>";
 			echo "<td>" . $row["Match ID"] . "</td>";
 			echo "<td>" . $row["Week Number"] . "</td>";
-			echo "<td bgcolor=\"#00cc00\"><center>" . $row["Green Server"] . "<p>" . $row["Green Population"] . "</center></td>";
-			echo "<td bgcolor=\"#3399ff\"><center>" . $row["Blue Server"] . "<p>" . $row["Blue Population"] . "</center></td>";
-			echo "<td bgcolor=\"#ff5050\"><center>" . $row["Red Server"] . "<p>" . $row["Red Population"] . "</center></td>";
+			echo "<td bgcolor=\"#00cc00\"><center>" . $row["Green Server"] . "<br><br>" . $row["Green Population"] . "</center></td>";
+			echo "<td bgcolor=\"#3399ff\"><center>" . $row["Blue Server"] . "<br><br>" . $row["Blue Population"] . "</center></td>";
+			echo "<td bgcolor=\"#ff5050\"><center>" . $row["Red Server"] . "<br><br>" . $row["Red Population"] . "</center></td>";
 			echo "<td>" . $row["Start Time"] . "</td>";
 			echo "<td>" . $row["End Time"] . "</td>";
 			echo "</tr>";
