@@ -91,7 +91,7 @@
 		{
 			$scoreQuery .= "and timeStamp >= \"" . $_GET["timeStamp_begin"] . "\" ";
 		}
-		if ($_GET["last_flipped_end"] != "")
+		if ($_GET["timeStamp_end"] != "")
 		{
 			$scoreQuery .= "and timeStamp <= \"" . $_GET["timeStamp_end"] . "\" ";
 		}
