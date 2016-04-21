@@ -5,6 +5,7 @@
 	<title>GW2 Analyser Log In</title>
 	<style>body{background:#FFF;}</style>
 	<form action="forward_to_analyser.php" method="POST">
+		<center><h1>GW2 Competitive Analytic Tool</h1></center>
 		<table>
 			<tr><td>User name:</td><td><input type="text" name="username"></td></tr>
 			<tr><td>Password:</td><td><input type="password" name="password"></td></tr>
