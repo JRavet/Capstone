@@ -35,5 +35,12 @@
 				echo "<p>There was an error connecting to the database.</p>";
 			}
 		?>
-	</form>
+	</form>	
+		<br>
+		<br>
+		<br>
+		<p>Please consider donating to help pay for the server</p>
+		<form action="https://www.everbutton.com/pay/765">
+			<input type="submit" value="Donate"/>
+		</form>
 </html>
