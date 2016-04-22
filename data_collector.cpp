@@ -502,6 +502,21 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 	/* */
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 	request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches?ids=all"));
+	//get the current time in UTC format to pass later
+	time_t t = time(NULL); //get current local time
+	UTCTime = gmtime( &t ); //convert current time to UTC
+	string current_time = "";
+	convertNumToString(&converter,(UTCTime->tm_year + 1900),&current_time);
+	current_time += "-";
+	convertNumToString(&converter,(UTCTime->tm_mon + 1),&current_time);
+	current_time += "-";
+	convertNumToString(&converter,(UTCTime->tm_mday),&current_time);
+	current_time += " ";
+	convertNumToString(&converter,(UTCTime->tm_hour),&current_time);
+	current_time += ":";
+	convertNumToString(&converter,(UTCTime->tm_min),&current_time);
+	current_time += ":";
+	convertNumToString(&converter,(UTCTime->tm_sec),&current_time);
 	try
 	{
 		request.perform();
@@ -521,21 +536,6 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 				}
 				(*stored_matchDetails) = true;
 			}
-			//get the current time in UTC format to pass later
-			time_t t = time(NULL); //get current local time
-			UTCTime = gmtime( &t ); //convert current time to UTC
-			string current_time = "";
-			convertNumToString(&converter,(UTCTime->tm_year + 1900),&current_time);
-			current_time += "-";
-			convertNumToString(&converter,(UTCTime->tm_mon + 1),&current_time);
-			current_time += "-";
-			convertNumToString(&converter,(UTCTime->tm_mday),&current_time);
-			current_time += " ";
-			convertNumToString(&converter,(UTCTime->tm_hour),&current_time);
-			current_time += ":";
-			convertNumToString(&converter,(UTCTime->tm_min),&current_time);
-			current_time += ":";
-			convertNumToString(&converter,(UTCTime->tm_sec),&current_time);
 			for (int j = 0; j < (int)all_match_data.size(); j++)
 			{
 				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
