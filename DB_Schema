@@ -48,12 +48,24 @@ CREATE TABLE match_details
  grn_srv_population enum("Low", "Medium", "High", "VeryHigh", "Full"),
  blu_srv_population enum("Low", "Medium", "High", "VeryHigh", "Full"),
  red_srv_population enum("Low", "Medium", "High", "VeryHigh", "Full"),
+ green_srv2 int(4),
+ blue_srv2 int(4),
+ red_srv2  int(4),
+ grn_srv2_pop enum("","Low", "Medium", "High", "VeryHigh", "Full"),
+ blu_srv2_pop enum("","Low", "Medium", "High", "VeryHigh", "Full"),
+ red_srv2_pop enum("","Low", "Medium", "High", "VeryHigh", "Full"),
  PRIMARY KEY(match_id,start_time),
  FOREIGN KEY(green_srv) references server_info(srv_id)
  ON UPDATE CASCADE,
  FOREIGN KEY(blue_srv) references server_info(srv_id)
  ON UPDATE CASCADE,
  FOREIGN KEY(red_srv) references server_info(srv_id)
+ ON UPDATE CASCADE,
+  FOREIGN KEY(green_srv2) references server_info(srv_id)
+ ON UPDATE CASCADE,
+ FOREIGN KEY(blue_srv2) references server_info(srv_id)
+ ON UPDATE CASCADE,
+ FOREIGN KEY(red_srv2) references server_info(srv_id)
  ON UPDATE CASCADE
 );
 
