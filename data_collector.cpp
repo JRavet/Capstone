@@ -231,6 +231,11 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 /* */
 void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLstmt, bool *force_resync)
 {
+	if (grn_srv == 0 && blu_srv == 0 && red_srv == 0)
+	{
+		(*SQLstmt) += ",NULL,NULL,NULL";
+		return;
+	}
 	Easy request;
 	stringstream result;
 	Json::Value server_populations;
@@ -250,42 +255,36 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 		/* */
 		if (parser.parse(result.str(), server_populations))
 		{ //TODO not the prettiest; refine later
-			if (server_populations[0]["id"].asInt() == grn_srv)
+			(*SQLstmt) += ",\"";			
+			for (unsigned int i = 0; i < server_populations.size(); i++)
 			{
-				(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
+				if (server_populations[i]["id"].asInt() == grn_srv)
+				{
+					(*SQLstmt) += server_populations[i]["population"].asString();
+					break;
+				}
 			}
-			else if (server_populations[1]["id"].asInt() == grn_srv)
+			(*SQLstmt) += "\"";
+			(*SQLstmt) += ",\"";
+			for (unsigned int i = 0; i < server_populations.size(); i++)
 			{
-				(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
+				if (server_populations[i]["id"].asInt() == blu_srv)
+				{
+					(*SQLstmt) += server_populations[i]["population"].asString();
+					break;
+				}
 			}
-			else if (server_populations[2]["id"].asInt() == grn_srv)
+			(*SQLstmt) += "\"";
+			(*SQLstmt) += ",\"";
+			for (unsigned int i = 0; i < server_populations.size(); i++)
 			{
-				(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
+				if (server_populations[i]["id"].asInt() == red_srv)
+				{
+					(*SQLstmt) += server_populations[i]["population"].asString();
+					break;
+				}
 			}
-			if (server_populations[0]["id"].asInt() == blu_srv)
-			{
-				(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
-			}
-			else if (server_populations[1]["id"].asInt() == blu_srv)
-			{
-				(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
-			}
-			else if (server_populations[2]["id"].asInt() == blu_srv)
-			{
-				(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
-			}
-			if (server_populations[0]["id"].asInt() == red_srv)
-			{
-				(*SQLstmt) += ",\"" + server_populations[0]["population"].asString() + "\"";
-			}
-			else if (server_populations[1]["id"].asInt() == red_srv)
-			{
-				(*SQLstmt) += ",\"" + server_populations[1]["population"].asString() + "\"";
-			}
-			else if (server_populations[2]["id"].asInt() == red_srv)
-			{
-				(*SQLstmt) += ",\"" + server_populations[2]["population"].asString() + "\"";
-			}
+			(*SQLstmt) += "\"";
 		}
 	}
 	catch (exception &e)
@@ -342,6 +341,38 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 				SQLstmt += ",";
 				convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
 				get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt,force_resync);
+				SQLstmt += ",";
+				int red2id=0,blu2id=0,grn2id=0;
+				if ((*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt() == (*match_data)[i]["worlds"][FIRST_SRV].asInt())
+				{
+					SQLstmt += "NULL";
+				}
+				else
+				{
+					convertNumToString(&converter, (*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt(),&SQLstmt);
+					grn2id=(*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt();
+				}
+				SQLstmt += ",";
+				if ((*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt() == (*match_data)[i]["worlds"][SECOND_SRV].asInt())
+				{
+					SQLstmt += "NULL";
+				}
+				else
+				{
+					convertNumToString(&converter, (*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt(),&SQLstmt);
+					blu2id=(*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt();
+				}
+				SQLstmt += ",";	
+				if ((*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt() == (*match_data)[i]["worlds"][THIRD_SRV].asInt())
+				{
+					SQLstmt += "NULL";
+				}
+				else
+				{
+					convertNumToString(&converter, (*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt(),&SQLstmt);
+					red2id=(*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt();
+				}
+				get_server_populations(grn2id,blu2id,red2id,&SQLstmt,force_resync);
 				SQLstmt += ");";
 				//
 				try
