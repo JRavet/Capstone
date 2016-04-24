@@ -32,16 +32,17 @@
 		var data = new google.visualization.DataTable($data);
 		var options = {
 			title: \"$title\",
-			width: 120,
+			width: 90,
+			legend: {position: \"none\"},
 			backgroundColor: 'transparent',
 			$options
-			height: 120,
+			height: 90,
 			colors: ['#00cc00','#3399ff','#ff5050']
 		};
 		var div = document.getElementById(\"$idName\");
 		div.style.position=\"absolute\";
 		div.style.left=(($x/5.5))-970+'px';
-		div.style.top=(($y/5.5))-1100+'px';
+		div.style.top=(($y/5.5))-1080+'px';
 		new google.visualization.PieChart(div).draw(data,options);
 	}
 	</script>
