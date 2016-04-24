@@ -25,6 +25,7 @@
 	echo "<table><tr>";
 	createButton("match_details_analyser.php","Match Detail Analyser");
 	createButton("activity_analyser.php","Activity Analyser");
+	createButton("activity_map.php","Activity Map");
 	createButton("guild_analyser.php","Guild Analyser");
 	createButton("map_score_table.php","Map Score Table");
 	createButton("map_score_graph.php","Map Score Graph");
