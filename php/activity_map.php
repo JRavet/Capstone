@@ -22,8 +22,24 @@
 		$table['rows'] = $rows;
 		return $jsonTable = json_encode($table);
 	}
-	function generate_googleChart($data,$title,$idName,$options,$x,$y)
+	function generate_googleChart($data,$title,$idName,$options,$x,$y,$obj_type)
 	{
+		if ($obj_type == "Castle")
+		{
+			$size=150;
+		}
+		elseif ($obj_type == "Keep")
+		{
+			$size=120;
+		}
+		elseif ($obj_type == "Tower")
+		{
+			$size=90;
+		}
+		else
+		{
+			$size=60;
+		}
 	echo "<script type=\"text/javascript\">
 	google.load('visualization', '1', {'packages':['corechart']});
 	google.setOnLoadCallback(drawChart);
@@ -32,17 +48,17 @@
 		var data = new google.visualization.DataTable($data);
 		var options = {
 			title: \"$title\",
-			width: 90,
+			width: $size,
 			legend: {position: \"none\"},
 			backgroundColor: 'transparent',
 			$options
-			height: 90,
+			height: $size,
 			colors: ['#00cc00','#3399ff','#ff5050']
 		};
 		var div = document.getElementById(\"$idName\");
 		div.style.position=\"absolute\";
-		div.style.left=(($x/5.5))-970+'px';
-		div.style.top=(($y/5.5))-1080+'px';
+		div.style.left=(($x/5.5))-960-$size/2+45+'px'; //5.5, -960
+		div.style.top=(($y/5.5))-1190-$size/2+45+'px'; //5.5, -1190
 		new google.visualization.PieChart(div).draw(data,options);
 	}
 	</script>
@@ -66,34 +82,12 @@
 		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
-		<tr><td>Owner color: </td><td><select name=\"owner_color\">";
-		generate_option("","","owner_color");
-		generate_option("Green","Green","owner_color");
-		generate_option("Blue","Blue","owner_color");
-		generate_option("Red","Red","owner_color");
-		echo "</select></td></tr>
 		<tr><td>Last seized: </td><td><input type=\"datetime\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"datetime\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
 		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
 			<td><input type=\"datetime\" name=\"claimed_at_end\" value=\"" . $_GET["claimed_at_end"] . "\"/></td></tr>
 		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
-		<tr><td>Objective name: </td><td><input type=\"text\" name=\"obj_name\" value=\"" . $_GET["obj_name"] . "\"/></td></tr>
-		<tr><td>Objective type: </td><td><select name=\"obj_type\">";
-		generate_option("","","obj_type");
-		generate_option("Camp","Camp","obj_type");
-		generate_option("Tower","Tower","obj_type");
-		generate_option("Keep","Keep","obj_type");
-		generate_option("Castle","Castle","obj_type");
-		echo "</select></td></tr>
-		<tr><td>Map type: </td><td><select name=\"map_type\">";
-		generate_option("","All Maps","map_type");
-		generate_option("center","Eternal Battlegrounds","map_type");
-		generate_option("greenHome","Green Borderlands","map_type");
-		generate_option("blueHome","Blue Borderlands","map_type");
-		generate_option("redHome","Red Borderlands","map_type");
-		generate_option("home","All Borderlands","map_type");
-		echo "</select></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
 	echo "</table>
@@ -115,6 +109,7 @@ SUM(CASE WHEN owner_color=\"Blue\" THEN 1 ELSE 0 END) as \"Blue Count\",
 SUM(CASE WHEN owner_color=\"Red\" THEN 1 ELSE 0 END) as \"Red Count\",
 activity_data.obj_id as \"obj_id\",
 objective.name as \"Objective Name\",
+objective.type as \"obj_type\",
 coordx, coordy,
 map_type as \"Map\"
 FROM activity_data 
@@ -222,7 +217,7 @@ WHERE activity_data.start_time = match_details.start_time ";
 		$resultSet = $conn->query($activityQuery);
 		foreach ($resultSet as $r)
 		{
-			generate_googleChart(generate_jsontable($resultSet,array("Green Count", "Blue Count", "Red Count"),array($r["Green Count"],$r["Blue Count"],$r["Red Count"])),$r["Objective Name"],$r["Objective Name"],"",$r["coordx"],$r["coordy"]);
+			generate_googleChart(generate_jsontable($resultSet,array("Green Count", "Blue Count", "Red Count"),array($r["Green Count"],$r["Blue Count"],$r["Red Count"])),$r["Objective Name"],$r["Objective Name"],"",$r["coordx"],$r["coordy"],$r["obj_type"]);
 		}
 		?>
 	</body>
