@@ -114,7 +114,7 @@ INNER JOIN guild ON activity_data.guild_id=guild.guild_id
 INNER JOIN objective ON activity_data.obj_id=objective.obj_id
 INNER JOIN server_info on activity_data.owner_server=server_info.srv_id
 INNER JOIN match_details on match_details.match_id=activity_data.match_id
-WHERE activity_data.start_time = match_details.start_time ";
+WHERE activity_data.start_time = match_details.start_time AND (IFNULL(duration_owned,1) or duration_owned > 0)";
 		if (
 			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
