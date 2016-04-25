@@ -100,11 +100,8 @@
 		//
 		//
 		echo "<table border=\"1\">";
-		echo "<th>Row #</th><th>Match ID</th><th>Week Number</th><th>Time Stamp</th><th>|</th><th>Green Kills<p>KD Ratio</th><th>Blue Kills<p>KD Ratio</th>
-		<th>Red Kills<p>KD Ratio</th><th>Total Kills<p>KD Ratio</th><th>|</th><th>Green Deaths</th>
-		<th>Blue Deaths</th><th>Red Deaths</th><th>Total Deaths</th><th>|</th>
-		<th>Green Score</th><th>Blue Score</th><th>Red Score</th><th>Total Score</th><th>|</th>
-		<th>Green PPT</th><th>Blue PPT</th><th>Red PPT</th><th>|</th><th>Green Server</th><th>Blue Server</th><th>Red Server</th><th>Errors Corrected</th>";
+		echo "<th>Row #</th><th>Match ID</th><th>Week #</th><th>Time Stamp</th><th>Server Name</th>
+		<th>Kills</th><th>Deaths</th><th>KD Ratio</th><th>Score</th><th>PPT</th><th>Errors Corrected</th>";
 		$i = 0;
 		$resultSet = $conn->query($scoreQuery);
 		$totalGrnKills=0;
@@ -144,30 +141,40 @@
 			    echo "<td>" . $row["Match ID"] . "</td>";
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Time Stamp"] . "</td>";
-			    echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "<p>" . number_format($row["Green KD"],3) . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "<p>" . number_format($row["Blue KD"],3) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "<p>" . number_format($row["Red KD"],3) . "</td>";
-			  	echo "<td>" . number_format($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "<p>" . number_format(($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"])/($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]),3) . "</td>";
-			  	echo "<td>|</td>";
+			    //green
+			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Server"] . "</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "</td>";
 			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Deaths"]) . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Deaths"]) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Deaths"]) . "</td>";
-			  	echo "<td>" . number_format($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]) . "</td>";
-			  	echo "<td>|</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green KD"],3) . "</td>";
 			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Score"]) . "</td>";
+			    echo "<td bgcolor=\"#00cc00\">" . $row["Green PPT"] . "</td></tr>";
+			   	//blue
+			    echo "<tr>";
+			    echo "<td></td><td></td><td></td><td></td>";
+			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Server"] . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Deaths"]) . "</td>";
+			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue KD"],3) . "</td>";
 			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Score"]) . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Score"]) . "</td>";
+			  	echo "<td bgcolor=\"#3399ff\">" . $row["Blue PPT"] . "</td></tr>";
+			  	//red
+			    echo "<tr>";
+			    echo "<td></td><td></td><td></td><td></td>";
+			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Server"] . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "</td>";
+			   	echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Deaths"]) . "</td>";
+			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red KD"],3) . "</td>";
+			  	echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Score"]) . "</td>";
+			  	echo "<td bgcolor=\"#ff5050\">" . $row["Red PPT"] . "</td></tr>";
+			  	//totals
+			    echo "<tr>";
+			    echo "<td></td><td></td><td></td><td></td>";
+			    echo "<td>Totals</td>";
+			    echo "<td>" . number_format($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"]) . "</td>";
+			    echo "<td>" . number_format($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]) . "</td>";
+			   	echo "<td>" . number_format(($row["Green Kills"] + $row["Blue Kills"] + $row["Red Kills"])/($row["Green Deaths"] + $row["Blue Deaths"] + $row["Red Deaths"]),3) . "</td>";
 			  	echo "<td>" . number_format($row["Green Score"] + $row["Blue Score"] + $row["Red Score"]) . "</td>";
-			  	echo "<td>|</td>";
-			    echo "<td bgcolor=\"#00cc00\">" . $row["Green PPT"] . "</td>";
-			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue PPT"] . "</td>";
-			    echo "<td bgcolor=\"#ff5050\">" . $row["Red PPT"] . "</td>";
-			    echo "<td>|</td>";
-			    echo "<td>" . $row["Green Server"] . "</td>";
-			    echo "<td>" . $row["Blue Server"] . "</td>";
-			    echo "<td>" . $row["Red Server"] . "</td>";
-			    echo "<td>" . $row["Errors Corrected"] . "</td>";
+			    echo "<td>0</td><td>" . $row["Errors Corrected"] . "</td></tr>";
 			    echo "</tr>";
 			}
 		}
@@ -175,29 +182,26 @@
 		{
 			die("Page number too high; data out of range.<p>");
 		}
-		echo "<tr><th></th><th></th><th></th><th></th><th>|</th><th>Green Kills Total</th><th>Blue Kills Total</th><th>Red Kills Total</th><th>Total Kills</th>
-		<th>|</th><th>Green Deaths Total</th><th>Blue Deaths Total</th><th>Red Deaths Total</th><th>Total Deaths</th>
-		<th>|</th><th></th><th></th><th></th><th></th><th>|</th><th>Avg Green PPT</th><th>Avg Blue PPT</th><th>Avg Red PPT</th><th>|</th></tr>";
-		echo "<tr><td></td><td></td><td></td><td></td><td>|</td>";
+		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
+		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
+		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
+		echo "</table><table border=\"1\">";
+		echo "<th>Green Kills Total</th><th>Blue Kills Total</th><th>Red Kills Total</th><th>Total Kills</th>
+		<th>Green Deaths Total</th><th>Blue Deaths Total</th><th>Red Deaths Total</th><th>Total Deaths</th>
+		<th>Avg Green PPT</th><th>Avg Blue PPT</th><th>Avg Red PPT</th></tr>";
+		echo "<tr>";
 		echo "<td bgcolor=\"#00cc00\">" . $totalGrnKills . "</td>";
 		echo "<td bgcolor=\"#3399ff\">" . $totalBluKills . "</td>";
 		echo "<td bgcolor=\"#ff5050\">" . $totalRedKills . "</td>";
 		echo "<td>" . ($totalGrnKills + $totalBluKills + $totalRedKills) . "</td>";
-		echo "<td>|</td>";
 		echo "<td bgcolor=\"#00cc00\">" . $totalGrnDeaths . "</td>";
 		echo "<td bgcolor=\"#3399ff\">" . $totalBluDeaths . "</td>";
 		echo "<td bgcolor=\"#ff5050\">" . $totalRedDeaths . "</td>";
 		echo "<td>" . ($totalGrnDeaths + $totalBluDeaths + $totalRedDeaths) . "</td>";
-		echo "<td>|</td><td></td><td></td><td></td><td></td><td>|</td>";
 		echo "<td bgcolor=\"#00cc00\">" . (int)($totalGrnPPT/$count) . "</td>";
 		echo "<td bgcolor=\"#3399ff\">" . (int)($totalBluPPT/$count) . "</td>";
-		echo "<td bgcolor=\"#ff5050\">" . (int)($totalRedPPT/$count) . "</td>";
-		echo "<td>|</td>";
-		
-		echo " </tr>";
-		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
-		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
-		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
+		echo "<td bgcolor=\"#ff5050\">" . (int)($totalRedPPT/$count) . "</td>";		
+		echo "</tr>";
 		echo "</table>";
 		echo "<p>Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
