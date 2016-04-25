@@ -12,10 +12,10 @@
 	    foreach($varData as $r)
 	    {
 			$temp = array();
-			$temp[] = array('v' => (string) $r['obj_id']);
+			$temp[] = array('v' => (string) $r);
 			foreach ($varNames as $v)
 			{
-				$temp[] = array('v' => (int) $r["$v"]);
+				$temp[] = array('v' => (int) $r);
 			}
 			$rows[] = array('c' => $temp);
 	    }
@@ -24,21 +24,18 @@
 	}
 	function generate_googleChart($data,$title,$idName,$options,$x,$y,$obj_type)
 	{
+		$size=60;
 		if ($obj_type == "Castle")
 		{
-			$size=150;
+			$size*=2;
 		}
 		elseif ($obj_type == "Keep")
 		{
-			$size=120;
+			$size*=1.66;
 		}
 		elseif ($obj_type == "Tower")
 		{
-			$size=90;
-		}
-		else
-		{
-			$size=60;
+			$size*=1.33;
 		}
 	echo "<script type=\"text/javascript\">
 	google.load('visualization', '1', {'packages':['corechart']});
