@@ -96,12 +96,11 @@
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
-		<tr>"; 
-		generate_radioButton("data_shown","Color-count, all data",0);
-		generate_radioButton("data_shown","Color-count, claims only",1);
-		echo "<td></td>";
-		generate_radioButton("data_shown","Color-count, Duration-owned",2);
-		generate_radioButton("data_shown","Color-count, Duration-claimed",3);
+		</table><table><tr>"; 
+		generate_radioButton("data_shown","Activity Count",0);
+		generate_radioButton("data_shown","Claims Count",1);
+		generate_radioButton("data_shown","Duration-owned (seconds)",2);
+		generate_radioButton("data_shown","Duration-claimed (seconds)",3);
 	
 	echo "</tr></table>
 	<table>
@@ -137,6 +136,7 @@ SUM(CASE WHEN owner_color=\"Red\" THEN TIME_TO_SEC(duration_owned) ELSE 0 END) a
 			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END) as \"Green Count\",
 SUM(CASE WHEN owner_color=\"Blue\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END) as \"Blue Count\",
 SUM(CASE WHEN owner_color=\"Red\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END) as \"Red Count\",";
+			$whereAdditions = " and claimed_at > 0 ";
 		}
 		$activityQuery = "SELECT 
 $selectAdditions
