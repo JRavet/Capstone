@@ -54,8 +54,8 @@
 		};
 		var div = document.getElementById(\"$idName\");
 		div.style.position=\"absolute\";
-		div.style.left=(($x/5.5))-960-$size/2+45+'px'; //5.5, -960
-		div.style.top=(($y/5.5))-1190-$size/2+45+'px'; //5.5, -1190
+		div.style.left=(($x/5.5))-965-$size/2+45+'px'; //5.5, -960
+		div.style.top=(($y/5.5))-1160-$size/2+45+'px'; //5.5, -1190
 		new google.visualization.PieChart(div).draw(data,options);
 	}
 	</script>
