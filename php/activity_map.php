@@ -128,15 +128,15 @@ SUM(CASE WHEN owner_color=\"Red\" THEN 1 ELSE 0 END) as \"Red Count\",";
 		}
 		if ($_GET["data_shown"] == 2)
 		{
-			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN duration_owned ELSE 0 END) as \"Green Count\",
-SUM(CASE WHEN owner_color=\"Blue\" THEN duration_owned ELSE 0 END) as \"Blue Count\",
-SUM(CASE WHEN owner_color=\"Red\" THEN duration_owned ELSE 0 END) as \"Red Count\",";
+			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN TIME_TO_SEC(duration_owned) ELSE 0 END) as \"Green Count\",
+SUM(CASE WHEN owner_color=\"Blue\" THEN TIME_TO_SEC(duration_owned) ELSE 0 END) as \"Blue Count\",
+SUM(CASE WHEN owner_color=\"Red\" THEN TIME_TO_SEC(duration_owned) ELSE 0 END) as \"Red Count\",";
 		}
 		if ($_GET["data_shown"] == 3)
 		{
-			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN duration_claimed ELSE 0 END) as \"Green Count\",
-SUM(CASE WHEN owner_color=\"Blue\" THEN duration_claimed ELSE 0 END) as \"Blue Count\",
-SUM(CASE WHEN owner_color=\"Red\" THEN duration_claimed ELSE 0 END) as \"Red Count\",";
+			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END) as \"Green Count\",
+SUM(CASE WHEN owner_color=\"Blue\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END) as \"Blue Count\",
+SUM(CASE WHEN owner_color=\"Red\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END) as \"Red Count\",";
 		}
 		$activityQuery = "SELECT 
 $selectAdditions
