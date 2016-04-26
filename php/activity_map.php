@@ -61,6 +61,15 @@
 	</script>
 	<div id=\"$idName\"></div>";
 	}
+	function generate_radioButton($name,$text,$value)
+	{
+		echo "<td><input type=\"radio\" name=\"$name\" value=\"$value\"";
+		if ($_GET[$name] == $value)
+		{
+			echo " checked ";
+		}
+		echo ">$text</td>";
+	}
 ?>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
@@ -86,8 +95,15 @@
 		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
-		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
-	echo "</table>
+		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
+		<tr>"; 
+		generate_radioButton("data_shown","Color-count, all data",0);
+		generate_radioButton("data_shown","Color-count, claims only",1);
+		echo "<td></td>";
+		generate_radioButton("data_shown","Color-count, Duration-owned",2);
+		generate_radioButton("data_shown","Color-count, Duration-claimed",3);
+	
+	echo "</tr></table>
 	<table>
 	<tr>
 	<td><input type=\"submit\" value=\"Submit Query\"/></td><td style=\"width:175px\"></td>
@@ -100,21 +116,40 @@
 	?>
 	<br/>
 	<?php
-		$activityQuery = "SELECT 
-SUM(CASE WHEN owner_color=\"Green\" THEN 1 ELSE 0 END) as \"Green Count\",
+		if ($_GET["data_shown"] == 0 or $_GET["data_shown"] == 1)
+		{
+			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN 1 ELSE 0 END) as \"Green Count\",
 SUM(CASE WHEN owner_color=\"Blue\" THEN 1 ELSE 0 END) as \"Blue Count\",
-SUM(CASE WHEN owner_color=\"Red\" THEN 1 ELSE 0 END) as \"Red Count\",
+SUM(CASE WHEN owner_color=\"Red\" THEN 1 ELSE 0 END) as \"Red Count\",";
+		}
+		if ($_GET["data_shown"] == 1)
+		{
+			$whereAdditions = " and claimed_at > 0 ";
+		}
+		if ($_GET["data_shown"] == 2)
+		{
+			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN duration_owned ELSE 0 END) as \"Green Count\",
+SUM(CASE WHEN owner_color=\"Blue\" THEN duration_owned ELSE 0 END) as \"Blue Count\",
+SUM(CASE WHEN owner_color=\"Red\" THEN duration_owned ELSE 0 END) as \"Red Count\",";
+		}
+		if ($_GET["data_shown"] == 3)
+		{
+			$selectAdditions = "SUM(CASE WHEN owner_color=\"Green\" THEN duration_claimed ELSE 0 END) as \"Green Count\",
+SUM(CASE WHEN owner_color=\"Blue\" THEN duration_claimed ELSE 0 END) as \"Blue Count\",
+SUM(CASE WHEN owner_color=\"Red\" THEN duration_claimed ELSE 0 END) as \"Red Count\",";
+		}
+		$activityQuery = "SELECT 
+$selectAdditions
 activity_data.obj_id as \"obj_id\",
 objective.name as \"Objective Name\",
 objective.type as \"obj_type\",
-coordx, coordy,
-map_type as \"Map\"
+coordx, coordy
 FROM activity_data 
 INNER JOIN guild ON activity_data.guild_id=guild.guild_id
 INNER JOIN objective ON activity_data.obj_id=objective.obj_id
 INNER JOIN server_info on activity_data.owner_server=server_info.srv_id
 INNER JOIN match_details on match_details.match_id=activity_data.match_id
-WHERE activity_data.start_time = match_details.start_time AND (IFNULL(duration_owned,1) or duration_owned > 0)";
+WHERE activity_data.start_time = match_details.start_time $whereAdditions";
 		if (
 			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
