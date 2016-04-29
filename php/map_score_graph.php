@@ -142,6 +142,7 @@
 		//
 		//
 		$resultSet = $conn->query($scoreQuery);
+		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
 		$resultSet = new ArrayIterator($resultSet->fetchAll());
 		$redName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON red_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");
 		$blueName = $conn->query("SELECT name FROM server_info INNER JOIN match_details ON blue_srv=srv_id WHERE match_id = \"" . $_GET["region"] . "-" . $_GET["match_num"] . "\" AND week_num = \"" . $_GET["week_num"] . "\";");

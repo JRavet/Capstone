@@ -53,11 +53,12 @@
 		}
 		$matchQuery .= " ORDER BY week_num DESC,match_id ASC LIMIT 68;";
 		//
+		$resultSet = $conn->query($matchQuery);
+		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
 		echo "<table border=\"1\">";
 		echo "<th>Match ID</th><th>Week Number</th>
 		<th>Green Server<p>Population</th><th>Blue Server<p>Population</th><th>Red Server<p>Population</th>
 		<th>Start Time</th><th>End Time</th>";
-		$resultSet = $conn->query($matchQuery);
 		//
 		foreach ($resultSet as $row)
 		{

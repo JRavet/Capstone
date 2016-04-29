@@ -99,11 +99,12 @@
 		//
 		//
 		//
+		$resultSet = $conn->query($scoreQuery);
+		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
 		echo "<table border=\"1\">";
 		echo "<th>Row #</th><th>Match ID</th><th>Week #</th><th>Time Stamp</th><th>Server Name</th>
 		<th>Kills</th><th>Deaths</th><th>KD Ratio</th><th>Score</th><th>PPT</th><th>Errors Corrected</th>";
 		$i = 0;
-		$resultSet = $conn->query($scoreQuery);
 		$totalGrnKills=0;
 		$totalBluKills=0;
 		$totalRedKills=0;

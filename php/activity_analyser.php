@@ -197,13 +197,14 @@
 		$activityQuery .= "ORDER BY " . $_GET["sort_by1"] . "," . $_GET["sort_by2"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
 		//
 		//
-		//
+		//		
+		$resultSet = $conn->query($activityQuery);
+		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
 		echo "<table border=\"1\">";
 		echo "<th>Row #</th><th>Time Stamp</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
 		<th>Last Seized At</th><th>Duration Owned</th><th>Claimed At</th><th>Duration Claimed</th><th>Ingame Clock</th><th>Objective Name</th>
 		<th>Objective Type</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
 		$i = 0;
-		$resultSet = $conn->query($activityQuery);
 		foreach ($resultSet as $row)
 		{
 			$i++;
