@@ -17,8 +17,12 @@
 	}
 	function createButton($pageName,$buttonText)
 	{
-		echo "<td><form action=\"" . $pageName . "\">
-			<input type=\"submit\" value=\"" . $buttonText ."\">
+		echo "<td><form action=\"" . $pageName . "\" method=\"GET\">";
+		foreach(array_keys($_GET) as $key)
+		{
+			echo "<input type=\"hidden\" value=\"" . $_GET[$key] . "\" name=\"$key\">";
+		}
+		echo "<input type=\"submit\" value=\"" . $buttonText ."\">
 		</form></td>";
 	}
 	echo "<center><h1>GW2 Competitive Analytic Tool</h1></center>";
