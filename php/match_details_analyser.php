@@ -11,7 +11,8 @@
 		generate_option("1","NA","region");
 		generate_option("2","EU","region");
 		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
-		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>";
+		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
+		<tr><td>Server name: </td><td><input name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>";
 	echo "</table>
 	<table>
 	<tr>
@@ -50,6 +51,21 @@
 		if ($_GET["week_num"] != "")
 		{
 			$matchQuery .= "and week_num = \"" . $_GET["week_num"] . "\" ";
+		}
+		if ($_GET["obj_owner"] != "")
+		{
+			if (strlen($_GET["obj_owner"]) < 5)
+			{
+				$matchQuery .= "and (s1.shortName = \"" . $_GET["obj_owner"] . "\" or s2.shortName = \"" . $_GET["obj_owner"] . "\" 
+				or s3.shortName = \"" . $_GET["obj_owner"] . "\" or s1_1.shortName = \"" . $_GET["obj_owner"] . "\" 
+				or s2_1.shortName = \"" . $_GET["obj_owner"] . "\" or s3_1.shortName = \"" . $_GET["obj_owner"] . "\") ";
+			}
+			else
+			{
+				$matchQuery .=  "and (s1.name LIKE \"%" . $_GET["obj_owner"] . "%\" or s2.name LIKE \"%" . $_GET["obj_owner"] . "%\" or 
+				s3.name LIKE \"%" . $_GET["obj_owner"] . "%\" or s1_1.name LIKE \"%" . $_GET["obj_owner"] . "%\" or s2_1.name LIKE \"%" . $_GET["obj_owner"] . "%\" or 
+				s3_1.name LIKE \"%" . $_GET["obj_owner"] . "%\") ";
+			}
 		}
 		$matchQuery .= " ORDER BY week_num DESC,match_id ASC LIMIT 68;";
 		//
