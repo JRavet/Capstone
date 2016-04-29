@@ -24,6 +24,14 @@
 		}
 		echo "<input type=\"submit\" value=\"" . $buttonText ."\">
 		</form></td>";
+		if (basename($_SERVER['PHP_SELF']) == $pageName)
+		{
+			$displayName = basename($_SERVER['PHP_SELF']);
+			$displayName = str_replace("_"," ",$displayName);
+			$displayName = str_replace(".php"," ",$displayName);
+			$displayName = ucwords($displayName);
+			echo "<center><h3>" . $displayName . "</h3></center>";
+		}
 	}
 	echo "<center><h1>GW2 Competitive Analytic Tool</h1></center>";
 	echo "<table><tr>";
