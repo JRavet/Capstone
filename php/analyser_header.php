@@ -56,12 +56,12 @@
 	}
 	function check_inputs()
 	{
-		$pattern = '|()[]{}/\\\'\"+_;*&^%$#@!?<>,';
+		$pattern = '/;|\'|"|\(|\)|\[|\]|\||>|<|\?|\/|\\\|{|}|\^|&|\\*|\$|@|#|%|\+|!/';
 		foreach ($_GET as $param)
 		{
-			if (strpos($pattern,$param) !== false)
+			if (preg_match($pattern,$param) != 0)
 			{
-				die("Invalid input");
+				die("<b>Invalid input</b>");
 			}
 		}
 	}
