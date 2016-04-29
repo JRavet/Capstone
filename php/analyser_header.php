@@ -56,7 +56,7 @@
 	}
 	function check_inputs()
 	{
-		$pattern = '/;|\'|"|\[|\]|\||>|<|\?|\/|\\\|{|}|\^|&|\$|@|#|%|\+|!/';
+		$pattern = '/;|"|\[|\]|\||>|<|\?|\/|\\\|{|}|\^|&|\$|@|#|%|\+|!/';
 		foreach ($_GET as $param)
 		{
 			if (preg_match($pattern,$param) != 0)
