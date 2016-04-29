@@ -137,7 +137,7 @@
 		}
 		if ($_GET["obj_owner"] != "")
 		{
-			if (strlen($_GET["obj_owner"]) < 4)
+			if (strlen($_GET["obj_owner"]) < 5)
 			{
 				$activityQuery .= "and server_info.shortName = \"" . $_GET["obj_owner"] . "\" ";
 			}
