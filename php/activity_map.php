@@ -154,8 +154,7 @@ WHERE activity_data.start_time = match_details.start_time $whereAdditions";
 			$_GET["match_num"] == "" and $_GET["week_num"] == "" and $_GET["obj_owner"] == ""
 			and $_GET["owner_color"] == "" and $_GET["last_flipped_begin"] == "" and $_GET["last_flipped_end"] == ""
 			and $_GET["claimed_at_begin"] == "" and $_GET["claimed_at_end"] == "" and $_GET["tick_timer_begin"] == ""
-			and $_GET["tick_timer_end"] == "" and $_GET["obj_name"] == "" and $_GET["obj_type"] == ""
-			and $_GET["map_type"] == "" and $_GET["guild_name"] == "" and $_GET["guild_tag"] == ""
+			and $_GET["tick_timer_end"] == "" and $_GET["guild_name"] == "" and $_GET["guild_tag"] == ""
 			and $_GET["timeStamp_begin"] == "" and $_GET["timeStamp_end"] == "" and $_GET["region"] == ""
 		)
 		{
@@ -220,18 +219,6 @@ WHERE activity_data.start_time = match_details.start_time $whereAdditions";
 		if ($_GET["tick_timer_end"] != "")
 		{
 			$activityQuery .= "and tick_timer <= \"" . $_GET["tick_timer_end"] . "\" ";
-		}
-		if ($_GET["obj_name"] != "")
-		{
-			$activityQuery .= "and objective.name LIKE \"%" . $_GET["obj_name"] . "%\" ";
-		}
-		if ($_GET["obj_type"] != "")
-		{
-			$activityQuery .= "and objective.type = \"" . $_GET["obj_type"] . "\" ";
-		}
-		if ($_GET["map_type"] != "")
-		{
-			$activityQuery .= "and objective.map_type LIKE \"%" . $_GET["map_type"] . "%\" ";
 		}
 		if ($_GET["guild_name"] != "")
 		{
