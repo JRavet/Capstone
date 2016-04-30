@@ -8,8 +8,8 @@
 	<table>";
 	echo "<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
 		generate_option("","","region");
-		generate_option("1","NA","region");
-		generate_option("2","EU","region");
+		generate_option("1","1 (NA)","region");
+		generate_option("2","2 (EU)","region");
 		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
 		<tr><td>Server name: </td><td><input name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>";
