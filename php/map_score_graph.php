@@ -35,6 +35,10 @@
 			width: 600,
 			$options
 			height: 300,
+			hAxis: {
+				textPosition: 'none'
+			},
+			pointSize:1.5,
 			legend: {position: 'bottom'},
 			colors: ['#00cc00','#3399ff','#ff5050']
 		};
