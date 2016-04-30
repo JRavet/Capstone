@@ -50,6 +50,12 @@
 			backgroundColor: 'transparent',
 			$options
 			height: $size,
+			tooltip:{textStyle:{fontSize:($size/60)*8-1}},
+			titleTextStyle:
+			{
+				color:'white',
+				fontSize:8
+			},
 			colors: ['#00cc00','#3399ff','#ff5050']
 		};
 		var div = document.getElementById(\"$idName\");
