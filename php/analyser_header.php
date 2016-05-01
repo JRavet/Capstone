@@ -42,6 +42,7 @@
 	createButton("map_score_table.php","Map Score Table");
 	createButton("map_score_graph.php","Map Score Graph");
 	createButton("logout.php","Log Out");
+	createButton("change_log.php","Change Log");
 	echo "</tr></table><br/>";
 ?>
 <?php 
