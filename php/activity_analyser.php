@@ -96,6 +96,7 @@ include 'bootstrap_styling.php';
 	<br/>
 	<?php
 		$offset_amount = 500;
+		$limit = 50000;
 		$activityQuery = "SELECT timeStamp, duration_owned as \"Duration Owned\", duration_claimed as \"Duration Claimed\", activity_data.match_id as \"Match ID\", week_num as \"Week Number\",
 		server_info.name as \"Server\", owner_color as \"Color\", last_flipped as \"Last Seized At\",
 		claimed_at as \"Claimed At\", tick_timer as \"Ingame Clock\", objective.name as \"Objective Name\",
@@ -198,7 +199,7 @@ include 'bootstrap_styling.php';
 		{
 			$activityQuery .= "and guild_tag = \"" . $_GET["guild_tag"] . "\" ";
 		}
-		$activityQuery .= "ORDER BY " . $_GET["sort_by1"] . "," . $_GET["sort_by2"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
+		$activityQuery .= "ORDER BY " . $_GET["sort_by1"] . "," . $_GET["sort_by2"] . " LIMIT $limit OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
 		//
 		//
 		//		
@@ -264,9 +265,9 @@ include 'bootstrap_styling.php';
 			    echo "</tr>";
 			}
 		}
-		if ($i == 0 and $_GET["offset_num"] > 0)
+		if ($i == $limit)
 		{
-			die("Page number too high; data out of range.<p>");
+			echo "<b>Maximum number of records obtained.<br> Refine search parameters or change page number to view more results.</b><br>";
 		}
 		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
