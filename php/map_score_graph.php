@@ -1,4 +1,7 @@
-<?php include 'analyser_header.php'; ?>
+<?php
+include 'analyser_header.php';
+include 'bootstrap_styling.php';
+?>
 <?php
 	function generate_jsontable($resultSet,$varNames)
 	{
@@ -56,31 +59,22 @@
 	<body>
 	<?php
 	echo "<form action=\"map_score_graph.php\" method=\"GET\">
-	<table>";
-	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
-		generate_option("week_num,timeStamp,map_scores.match_id","Week Number, Time Stamp, Match ID","sort_by");
-		generate_option("week_num,map_scores.match_id,timeStamp","Week Number, Match ID, Time Stamp","sort_by");
-		generate_option("timeStamp","Time Stamp","sort_by");
-		generate_option("map_scores.match_id","Match ID","sort_by");
-		generate_option("week_num","Week Number","sort_by");
-	echo "</select></tr>
-		<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
+	<table class=\"table-condensed\">";
+	echo "<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
 		generate_option("","","region");
 		generate_option("1","1 (NA)","region"); 
 		generate_option("2","2 (EU)","region");
 		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
-		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
-		<tr><td>Time stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
-		<tr><td>Map type: </td><td><select name=\"map_type\">";
+		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>";
+		createDateTime("Time stamp", "timeStamp_begin", "timeStamp_end");
+		echo "<tr><td>Map type: </td><td><select name=\"map_type\">";
 		generate_option("","All Maps","map_type");
 		generate_option("center","Eternal Battlegrounds","map_type");
 		generate_option("greenHome","Green Borderlands","map_type");
 		generate_option("blueHome","Blue Borderlands","map_type");
 		generate_option("redHome","Red Borderlands","map_type");
 		generate_option("home","All Borderlands","map_type");
-		echo "</select></td></tr>
-		<tr><td>Page #:</td><td><input type=\"number\" min=\"0\" name=\"offset_num\" value=\"" . $_GET["offset_num"] . "\"/></td></tr>";
+		echo "</select></td></tr>";
 	echo "</table>
 	<table>
 	<tr>
@@ -141,7 +135,7 @@
 		{
 			$scoreQuery .= "and timeStamp <= \"" . $_GET["timeStamp_end"] . "\" ";
 		}
-		$scoreQuery .= " GROUP BY timeStamp, map_scores.match_id ORDER BY " . $_GET["sort_by"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
+		$scoreQuery .= " GROUP BY timeStamp, map_scores.match_id;";
 		//
 		//
 		//

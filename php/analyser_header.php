@@ -33,6 +33,11 @@
 			echo "<center><h3>" . $displayName . "</h3></center>";
 		}
 	}
+	function createDateTime($label,$name1,$name2)
+	{
+	 	echo "<tr><td>$label: </td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"$name1\" value=\"" . $_GET[$name1] . "\"/></td>
+			<td>-</td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"$name2\" value=\"" . $_GET[$name2] . "\"/></td></tr>";
+	}
 	echo "<center><h1>GW2 Competitive Analytic Tool</h1></center>";
 	echo "<table><tr>";
 	createButton("match_details_analyser.php","Match Detail Analyser");
@@ -42,7 +47,6 @@
 	createButton("map_score_table.php","Map Score Table");
 	createButton("map_score_graph.php","Map Score Graph");
 	createButton("logout.php","Log Out");
-	createButton("change_log.php","Change Log");
 	echo "</tr></table><br/>";
 	echo "</div></nav>";
 ?>

@@ -42,9 +42,9 @@ include 'bootstrap_styling.php';
 		generate_option("guild.guild_tag","Guild Tag","sort_by2");
 		generate_option("duration_owned","Duration Owned","sort_by2");
 		generate_option("duration_claimed","Duration Claimed","sort_by2");
-		echo "</select></td><tr><td>Time Stamp: </td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
-		<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
+		echo "</select></td>";
+		createDateTime("Time Stamp", "timeStamp_begin", "timeStamp_end");
+		echo "<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
 		generate_option("","","region");
 		generate_option("1","1 (NA)","region");
 		generate_option("2","2 (EU)","region");
@@ -56,12 +56,10 @@ include 'bootstrap_styling.php';
 		generate_option("Green","Green","owner_color");
 		generate_option("Blue","Blue","owner_color");
 		generate_option("Red","Red","owner_color");
-		echo "</select></td></tr>
-		<tr><td>Last seized: </td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
-		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
-			<td><input type=\"datetime\" name=\"claimed_at_end\" value=\"" . $_GET["claimed_at_end"] . "\"/></td></tr>
-		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
+		echo "</select></td></tr>";
+		createDateTime("Last seized", "last_flipped_begin", "last_flipped_end");
+		createDateTime("Claimed at", "claimed_at_begin", "claimed_at_end");
+		echo "<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Objective name: </td><td><input type=\"text\" name=\"obj_name\" value=\"" . $_GET["obj_name"] . "\"/></td></tr>
 		<tr><td>Objective type: </td><td><select name=\"obj_type\">";

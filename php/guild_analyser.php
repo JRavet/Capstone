@@ -1,11 +1,15 @@
-<?php include 'analyser_header.php'; ?>
+<?php 
+include 'analyser_header.php';
+include 'bootstrap_styling.php';
+?>
 <html>
 	<title> Guild Analyser </title>
 	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"guild_analyser.php\" method=\"GET\">
-	<table>";
+	<div class=\"col-sm-12\">
+	<table class=\"table-condensed\">";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
 	generate_option("count(*)","Claim Count","sort_by");
 	generate_option("guild.guild_name","Guild Name","sort_by");
@@ -23,12 +27,10 @@
 		generate_option("Green","Green","owner_color");
 		generate_option("Blue","Blue","owner_color");
 		generate_option("Red","Red","owner_color");
-		echo "</select></td></tr>
-		<tr><td>Last seized: </td><td><input type=\"datetime\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
-		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
-			<td><input type=\"datetime\" name=\"claimed_at_end\" value=\"" . $_GET["claimed_at_end"] . "\"/></td></tr>
-		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
+		echo "</select></td></tr>";
+		createDateTime("Last seized", "last_flipped_begin", "last_flipped_end");
+		createDateTime("Claimed at", "claimed_at_begin", "claimed_at_end");
+		echo "<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Objective name: </td><td><input type=\"text\" name=\"obj_name\" value=\"" . $_GET["obj_name"] . "\"/></td></tr>
 		<tr><td>Objective type: </td><td><select name=\"obj_type\">";
@@ -48,7 +50,7 @@
 		echo "</select></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>";
-	echo "</table>
+	echo "</table></div>
 	<table>
 	<tr>
 	<td><input type=\"submit\" value=\"Submit Query\"/></td><td style=\"width:175px\"></td>
@@ -157,7 +159,7 @@
 		//
 		$resultSet = $conn->query($guildClaimQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<table border=\"1\">";
+		echo "<table class=\"table-condensed text-center\" border=\"1\">";
 		echo "<th>Row #</th><th>Number of Claims</th><th>Guild Name</th><th>Guild Tag</th>";
 		$i = 0;
 		foreach ($resultSet as $row)
@@ -170,7 +172,7 @@
 			echo "<td>" . $row["Guild Tag"] . "</td>";
 			echo "</tr>";
 		}
-		echo $i . ' results<p>';
+		echo 'Displaying ' . $i . ' results<p>';
 		echo "</table>";
 	?>
 	</body>

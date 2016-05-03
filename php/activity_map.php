@@ -1,4 +1,7 @@
-<?php include 'analyser_header.php'; ?>
+<?php
+include 'analyser_header.php';
+include 'bootstrap_styling.php';
+?>
 <?php
 	function generate_jsontable($resultSet,$varNames, $varData)
 	{
@@ -60,8 +63,8 @@
 		};
 		var div = document.getElementById(\"$idName\");
 		div.style.position=\"absolute\";
-		div.style.left=(($x/5.5))-965-$size/2+45+'px'; //5.5, -960
-		div.style.top=(($y/5.5))-1160-$size/2+45+'px'; //5.5, -1190
+		div.style.left=(($x/5.5))-975-$size/2+45+'px'; //5.5, -965
+		div.style.top=(($y/5.5))-1030-$size/2+45+'px'; //5.5, -1160
 		new google.visualization.PieChart(div).draw(data,options);
 	}
 	</script>
@@ -85,29 +88,26 @@
 	<body>
 	<?php
 	echo "<form action=\"activity_map.php\" method=\"GET\">
-	<table> <tr><td>Time Stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
-		<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
+	<table class=\"table-condensed\">"; 
+		createDateTime("Time stamp", "timeStamp_begin", "timeStamp_end");
+		echo "<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
 		generate_option("","","region");
 		generate_option("1","1 (NA)","region");
 		generate_option("2","2 (EU)","region");
 		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
 		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
-		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>
-		<tr><td>Last seized: </td><td><input type=\"datetime\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
-		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
-			<td><input type=\"datetime\" name=\"claimed_at_end\" value=\"" . $_GET["claimed_at_end"] . "\"/></td></tr>
-		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
+		<tr><td>Owner server: </td><td><input type=\"text\" name=\"obj_owner\" value=\"" . $_GET["obj_owner"] . "\"/></td></tr>";
+		createDateTime("Last seized", "last_flipped_begin", "last_flipped_end");
+		createDateTime("Claimed at", "claimed_at_begin", "claimed_at_end");
+		echo "<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
 			<td>-</td><td><input type=\"number\"min=\"1\" max=\"15\" name=\"tick_timer_end\" value=\"" . $_GET["tick_timer_end"] . "\"/></td></tr>
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
-		</table><table><tr>"; 
+		</table><table class=\"table-condensed\"><tr>"; 
 		generate_radioButton("data_shown","Activity Count",0);
 		generate_radioButton("data_shown","Claims Count",1);
 		generate_radioButton("data_shown","Duration-owned (seconds)",2);
 		generate_radioButton("data_shown","Duration-claimed (seconds)",3);
-	
 	echo "</tr></table>
 	<table>
 	<tr>

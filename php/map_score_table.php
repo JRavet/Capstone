@@ -1,11 +1,14 @@
-<?php include 'analyser_header.php'; ?>
+<?php
+include 'analyser_header.php';
+include 'bootstrap_styling.php';
+?>
 <html>
 	<title> Map Score Analyser </title>
 	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"map_score_table.php\" method=\"GET\">
-	<table>";
+	<table class=\"table-condensed\">";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by\">";
 		generate_option("week_num,timeStamp,map_scores.match_id","Week Number, Time Stamp, Match ID","sort_by");
 		generate_option("week_num,map_scores.match_id,timeStamp","Week Number, Match ID, Time Stamp","sort_by");
@@ -18,10 +21,9 @@
 		generate_option("1","1 (NA)","region");
 		generate_option("2","2 (EU)","region");
 		echo "</select><input type=\"number\" min=\"1\" max=\"9\" name=\"match_num\" value=\"" . $_GET["match_num"] . "\"/></td></tr> 
-		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>
-		<tr><td>Time stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
-		<tr><td>Map type: </td><td><select name=\"map_type\">";
+		<tr><td>Week number: </td><td><input type=\"number\" min=\"0\" max=\"52\" name=\"week_num\" value=\"" . $_GET["week_num"] . "\"/></td></tr>";
+		createDateTime("Time stamp", "timeStamp_begin", "timeStamp_end");
+		echo "<tr><td>Map type: </td><td><select name=\"map_type\">";
 		generate_option("","All Maps","map_type");
 		generate_option("center","Eternal Battlegrounds","map_type");
 		generate_option("greenHome","Green Borderlands","map_type");
@@ -44,6 +46,7 @@
 	<br/>
 	<?php
 		$offset_amount = 500;
+		$limit = 50000;
 		$scoreQuery = "SELECT map_scores.match_id as \"Match ID\", week_num as \"Week Number\",
 			timeStamp as \"Time Stamp\", sum(greenDeaths) as \"Green Deaths\",
 			sum(blueDeaths) as \"Blue Deaths\", sum(redDeaths) as \"Red Deaths\",
@@ -95,13 +98,13 @@
 		{
 			$scoreQuery .= "and timeStamp <= \"" . $_GET["timeStamp_end"] . "\" ";
 		}
-		$scoreQuery .= " GROUP BY timeStamp, map_scores.match_id ORDER BY " . $_GET["sort_by"] . " LIMIT 18446744073709551615 OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
+		$scoreQuery .= " GROUP BY timeStamp, map_scores.match_id ORDER BY " . $_GET["sort_by"] . " LIMIT $limit OFFSET " . $_GET["offset_num"]*$offset_amount . ";";
 		//
 		//
 		//
 		$resultSet = $conn->query($scoreQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<table border=\"1\">";
+		echo "<table class=\"table-condensed text-center\" border=\"1\">";
 		echo "<th>Row #</th><th>Match ID</th><th>Week #</th><th>Time Stamp</th><th>Server Name</th>
 		<th>Kills</th><th>Deaths</th><th>KD Ratio</th><th>Score</th><th>PPT</th><th>Errors Corrected</th>";
 		$i = 0;
@@ -143,7 +146,7 @@
 			    echo "<td>" . $row["Week Number"] . "</td>";
 			    echo "<td>" . $row["Time Stamp"] . "</td>";
 			    //green
-			    echo "<td bgcolor=\"#00cc00\">" . $row["Green Server"] . "</td>";
+			    echo "<td bgcolor=\"#00cc00\"><b>" . $row["Green Server"] . "</b></td>";
 			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Kills"]) . "</td>";
 			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green Deaths"]) . "</td>";
 			    echo "<td bgcolor=\"#00cc00\">" . number_format($row["Green KD"],3) . "</td>";
@@ -152,7 +155,7 @@
 			   	//blue
 			    echo "<tr>";
 			    echo "<td></td><td></td><td></td><td></td>";
-			    echo "<td bgcolor=\"#3399ff\">" . $row["Blue Server"] . "</td>";
+			    echo "<td bgcolor=\"#3399ff\"><b>" . $row["Blue Server"] . "</b></td>";
 			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Kills"]) . "</td>";
 			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue Deaths"]) . "</td>";
 			    echo "<td bgcolor=\"#3399ff\">" . number_format($row["Blue KD"],3) . "</td>";
@@ -161,7 +164,7 @@
 			  	//red
 			    echo "<tr>";
 			    echo "<td></td><td></td><td></td><td></td>";
-			    echo "<td bgcolor=\"#ff5050\">" . $row["Red Server"] . "</td>";
+			    echo "<td bgcolor=\"#ff5050\"><b>" . $row["Red Server"] . "</b></td>";
 			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Kills"]) . "</td>";
 			   	echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red Deaths"]) . "</td>";
 			    echo "<td bgcolor=\"#ff5050\">" . number_format($row["Red KD"],3) . "</td>";
@@ -179,14 +182,14 @@
 			    echo "</tr>";
 			}
 		}
-		if ($i == 0 and $_GET["offset_num"] > 0)
+		if ($i == $limit)
 		{
-			die("Page number too high; data out of range.<p>");
+			echo "<b>Maximum number of records obtained.<br> Refine search parameters or change page number to view more results.</b><br>";
 		}
 		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
 		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
-		echo "</table><table border=\"1\">";
+		echo "</table><table class=\"table-condensed text-center\" border=\"1\">";
 		echo "<th>Green Kills Total</th><th>Blue Kills Total</th><th>Red Kills Total</th><th>Total Kills</th>
 		<th>Green Deaths Total</th><th>Blue Deaths Total</th><th>Red Deaths Total</th><th>Total Deaths</th>
 		<th>Avg Green PPT</th><th>Avg Blue PPT</th><th>Avg Red PPT</th></tr>";
