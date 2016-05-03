@@ -6,7 +6,7 @@ include 'bootstrap_styling.php';
 	<title> Match Details Analyser </title>
 	<style>body{background:#FFF;}</style>
 	<body>
-	<div class="container-fluid col-sm-8 col-sm-offset-3">
+	<div class="container-fluid col-sm-12">
 	<?php
 	echo "<form action=\"match_details_analyser.php\" method=\"GET\">
 	<table class=\"table-condensed\">";
@@ -76,7 +76,7 @@ include 'bootstrap_styling.php';
 		//
 		$resultSet = $conn->query($matchQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<div class=\"container-fluid col-sm-10 col-sm-offset-1\">";
+		echo "<div class=\"container-fluid col-sm-12\">";
 		echo "<table class=\"table-condensed text-center\" border=\"1\">";
 		echo "<th>Match ID</th><th>Week Number</th>
 		<th>Green Server<p>Population</th><th>Blue Server<p>Population</th><th>Red Server<p>Population</th>
