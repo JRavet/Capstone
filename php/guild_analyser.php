@@ -159,7 +159,7 @@ include 'bootstrap_styling.php';
 		//
 		$resultSet = $conn->query($guildClaimQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<table class=\"table-condensed text-center\" border=\"1\">";
+		echo "<table class=\"table-condensed text-center table-striped table-bordered table-hover\" border=\"1\">";
 		echo "<th>Row #</th><th>Number of Claims</th><th>Guild Name</th><th>Guild Tag</th>";
 		$i = 0;
 		foreach ($resultSet as $row)
