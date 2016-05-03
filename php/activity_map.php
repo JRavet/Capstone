@@ -240,10 +240,22 @@ WHERE activity_data.start_time = match_details.start_time $whereAdditions";
 		//
 		$resultSet = $conn->query($activityQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<img src=\"gw2map.jpg\" style=\"width:2048;height:1490;position:absolute;z-index:-1;\">";
+		$map=1; //0 for desert, 1 for alpine
+		if ($map == 0)
+		{
+			echo "<img src=\"gw2_desert_map.jpg\" style=\"width:2048;height:1490;position:absolute;z-index:-1;\">";
+			$mapXoffset=0;
+			$mapYoffset=0;
+		}
+		else
+		{
+			echo "<img src=\"gw2_alpine_map.jpg\" style=\"width:1950;height:1400;position:absolute;z-index:-1;\">";
+			$mapXoffset=0;
+			$mapYoffset=0;
+		}
 		foreach ($resultSet as $r)
 		{
-			generate_googleChart(generate_jsontable($resultSet,array("Green Count", "Blue Count", "Red Count"),array($r["Green Count"],$r["Blue Count"],$r["Red Count"])),$r["Objective Name"],$r["Objective Name"],"",$r["coordx"],$r["coordy"],$r["obj_type"]);
+			generate_googleChart(generate_jsontable($resultSet,array("Green Count", "Blue Count", "Red Count"),array($r["Green Count"],$r["Blue Count"],$r["Red Count"])),$r["Objective Name"],$r["Objective Name"],"",$r["coordx"]+$mapXoffset,$r["coordy"]+$mapYoffset,$r["obj_type"]);
 		}
 		?>
 	</body>
