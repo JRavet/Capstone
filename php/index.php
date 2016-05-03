@@ -2,25 +2,21 @@
 	session_start();
 ?>
 <html>
+  	<?php include 'bootstrap_styling.php'; ?>
 	<title>GW2 Analyser Log In</title>
+	
 	<style>body{background:#FFF;}</style>
+	<div class="col-sm-8 col-sm-offset-1">
 	<form action="forward_to_analyser.php" method="POST">
 		<center><h1>GW2 Competitive Analytic Tool</h1></center>
 		<table>
-			<tr><td>User name:</td><td><input type="text" name="username"></td></tr>
-			<tr><td>Password:</td><td><input type="password" name="password"></td></tr>
-			<tr><td>Analyser:</td><td>
-			<select name="analyser_type">
-				<option value="match_details_analyser.php">Match Details Analyser</option>
-				<option value="activity_analyser.php">Activity Analyser</option>
-				<option value="guild_analyser.php">Guild Analyser</option>
-				<option value="map_score_table.php">Map-score Table</option>
-				<option value="map_score_graph.php">Map-score Graphs</option>
-			</select>
-			</td></tr>
+			<tr><td>User name: </td><td><input class="form-control" type="text" placeholder="Enter user name" name="username"></td></tr>
+			<tr><td><p></td></tr>
+			<tr><td>Password:</td><td><input class="form-control" type="password" placeholder="Enter password" name="password"></td></tr>
+			<tr><td><p></td></tr>
 			<tr><td></td><td><input type="submit" value="Log In"></td></tr>
 		</table>
-	
+	</div>
 		<?php
 			if ($_GET["error"] == "inv_cred")
 			{
@@ -36,11 +32,11 @@
 			}
 		?>
 	</form>	
-		<br>
-		<br>
-		<br>
+	<div class="col-sm-3 sidenav">
+	<br><br><br><br>
 		<p>Please consider donating to help pay for the server</p>
 		<form action="https://www.everbutton.com/pay/765">
 			<input type="submit" value="Donate"/>
 		</form>
+	</div>
 </html>

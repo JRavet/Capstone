@@ -1,11 +1,15 @@
-<?php include 'analyser_header.php'; ?>
+<?php 
+include 'analyser_header.php';
+include 'bootstrap_styling.php';
+?>
 <html>
 	<title> Match Details Analyser </title>
 	<style>body{background:#FFF;}</style>
 	<body>
+	<div class="container-fluid col-sm-8 col-sm-offset-3">
 	<?php
 	echo "<form action=\"match_details_analyser.php\" method=\"GET\">
-	<table>";
+	<table class=\"table-condensed\">";
 	echo "<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
 		generate_option("","","region");
 		generate_option("1","1 (NA)","region");
@@ -24,6 +28,7 @@
 	</tr>
 	</table>";
 	?>
+	</div>
 	<br/>
 	<?php
 		$matchQuery = "SELECT match_id as \"Match ID\", week_num as \"Week Number\",
@@ -71,7 +76,8 @@
 		//
 		$resultSet = $conn->query($matchQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<table border=\"1\">";
+		echo "<div class=\"container-fluid col-sm-10 col-sm-offset-1\">";
+		echo "<table class=\"table-condensed text-center\" border=\"1\">";
 		echo "<th>Match ID</th><th>Week Number</th>
 		<th>Green Server<p>Population</th><th>Blue Server<p>Population</th><th>Red Server<p>Population</th>
 		<th>Start Time</th><th>End Time</th>";
@@ -81,22 +87,22 @@
 			echo "<tr>";
 			echo "<td>" . $row["Match ID"] . "</td>";
 			echo "<td>" . $row["Week Number"] . "</td>";
-			echo "<td bgcolor=\"#00cc00\"><center>" . $row["Green Server"] . " (" . $row["Green Population"] . ")";
+			echo "<td bgcolor=\"#00cc00\"><center><b>" . $row["Green Server"] . "</b> (" . $row["Green Population"] . ")";
 			if ($row["Green Server2"] != "")
 			{
-				echo "<br>" . $row["Green Server2"] . " (" . $row["Green Population2"] . ")";
+				echo "<br><b>" . $row["Green Server2"] . "</b> (" . $row["Green Population2"] . ")";
 			}
 			echo "</center></td>";
-			echo "<td bgcolor=\"#3399ff\"><center>" . $row["Blue Server"] . " (" . $row["Blue Population"] . ")";
+			echo "<td bgcolor=\"#3399ff\"><center><b>" . $row["Blue Server"] . "</b> (" . $row["Blue Population"] . ")";
 			if ($row["Blue Server2"] != "")
 			{
-				echo "<br>" . $row["Blue Server2"] . " (" . $row["Blue Population2"] . ")";
+				echo "<br><b>" . $row["Blue Server2"] . "</b> (" . $row["Blue Population2"] . ")";
 			}
 			echo "</center></td>";
-			echo "<td bgcolor=\"#ff5050\"><center>" . $row["Red Server"] . " (" . $row["Red Population"] . ")";
+			echo "<td bgcolor=\"#ff5050\"><center><b>" . $row["Red Server"] . "</b> (" . $row["Red Population"] . ")";
 			if ($row["Red Server2"] != "")
 			{
-				echo "<br>" . $row["Red Server2"] . " (" . $row["Red Population2"] . ")";
+				echo "<br><b>" . $row["Red Server2"] . "</b> (" . $row["Red Population2"] . ")";
 			}
 			echo "</center></td>";
 			echo "<td>" . $row["Start Time"] . "</td>";
@@ -104,6 +110,7 @@
 			echo "</tr>";
 		}
 		echo "</table>";
+		echo "</div>";
 	?>
 	</body>
 </html>

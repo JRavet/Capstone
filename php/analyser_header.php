@@ -22,7 +22,7 @@
 		{
 			echo "<input type=\"hidden\" value=\"" . $_GET[$key] . "\" name=\"$key\">";
 		}
-		echo "<input type=\"submit\" value=\"" . $buttonText ."\">
+		echo "<button class=\"btn btn-default btn-sm\" type=\"submit\">" . $buttonText . "</button>
 		</form></td>";
 		if (basename($_SERVER['PHP_SELF']) == $pageName)
 		{
@@ -44,6 +44,7 @@
 	createButton("logout.php","Log Out");
 	createButton("change_log.php","Change Log");
 	echo "</tr></table><br/>";
+	echo "</div></nav>";
 ?>
 <?php 
 	function generate_option($value,$text,$select_name)

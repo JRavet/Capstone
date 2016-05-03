@@ -1,11 +1,15 @@
-<?php include 'analyser_header.php'; ?>
+<?php
+include 'analyser_header.php';
+include 'bootstrap_styling.php';
+?>
 <html>
 	<title> Activity Analyser </title>
 	<style>body{background:#FFF;}</style>
 	<body>
 	<?php
 	echo "<form action=\"activity_analyser.php\" method=\"GET\">
-	<table>";
+	<div class=\"col-sm-12\">
+	<table class=\"table-condensed\">";
 	echo "<tr><td>Sort by:</td><td><select name=\"sort_by1\">";
 		generate_option("timeStamp","Time Stamp","sort_by1");
 		generate_option("activity_data.match_id","Match ID","sort_by1");
@@ -38,8 +42,8 @@
 		generate_option("guild.guild_tag","Guild Tag","sort_by2");
 		generate_option("duration_owned","Duration Owned","sort_by2");
 		generate_option("duration_claimed","Duration Claimed","sort_by2");
-		echo "</select></td><tr><td>Time Stamp: </td><td><input type=\"datetime\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
+		echo "</select></td><tr><td>Time Stamp: </td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"timeStamp_begin\" value=\"" . $_GET["timeStamp_begin"] . "\"/></td>
+			<td>-</td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"timeStamp_end\" value=\"" . $_GET["timeStamp_end"] . "\"/></td></tr>
 		<tr><td>Region / Match Number:</td><td> <select name=\"region\">";
 		generate_option("","","region");
 		generate_option("1","1 (NA)","region");
@@ -53,8 +57,8 @@
 		generate_option("Blue","Blue","owner_color");
 		generate_option("Red","Red","owner_color");
 		echo "</select></td></tr>
-		<tr><td>Last seized: </td><td><input type=\"datetime\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
-			<td>-</td><td><input type=\"datetime\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
+		<tr><td>Last seized: </td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"last_flipped_begin\" value=\"" . $_GET["last_flipped_begin"] . "\"/></td>
+			<td>-</td><td><input type=\"datetime\" placeholder=\"YYYY-MM-DD hh:mm:ss\" name=\"last_flipped_end\" value=\"" . $_GET["last_flipped_end"] . "\"/></td></tr>
 		<tr><td>Claimed at: </td><td><input type=\"datetime\" name=\"claimed_at_begin\" value=\"" . $_GET["claimed_at_begin"] . "\"/></td><td>-</td>
 			<td><input type=\"datetime\" name=\"claimed_at_end\" value=\"" . $_GET["claimed_at_end"] . "\"/></td></tr>
 		<tr><td>In-game clock time: </td><td><input type=\"number\" min=\"1\" max=\"15\" name=\"tick_timer_begin\" value=\"" . $_GET["tick_timer_begin"] . "\"/></td>
@@ -78,7 +82,7 @@
 		<tr><td>Guild name: </td><td><input type=\"text\" name=\"guild_name\" value=\"" . $_GET["guild_name"] . "\"/></td></tr>
 		<tr><td>Guild tag: </td><td><input type=\"text\" name=\"guild_tag\" value=\"" . $_GET["guild_tag"] . "\"/></td></tr>
 		<tr><td>Page #:</td><td><input type=\"number\" min=\"0\" name=\"offset_num\" value=\"" . $_GET["offset_num"] . "\"/></td></tr>";
-	echo "</table>
+	echo "</table></div>
 	<table>
 	<tr>
 	<td><input type=\"submit\" value=\"Submit Query\"/></td><td style=\"width:175px\"></td>
@@ -200,7 +204,7 @@
 		//		
 		$resultSet = $conn->query($activityQuery);
 		if ($resultSet->rowCount() == 0) die("<b>No data returned.</b>");
-		echo "<table border=\"1\">";
+		echo "<div class=\"container-fluid col-sm-12\"><table class=\"table-striped table-bordered table-hover text-center\">";
 		echo "<th>Row #</th><th>Time Stamp</th><th>Match ID</th><th>Week Number</th><th>Server</th><th>Color</th>
 		<th>Last Seized At</th><th>Duration Owned</th><th>Claimed At</th><th>Duration Claimed</th><th>Ingame Clock</th><th>Objective Name</th>
 		<th>Objective Type</th><th>Map</th><th>Guild Name</th><th>Guild Tag</th>";
@@ -267,7 +271,7 @@
 		echo "Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
 		. ($i + ($_GET["offset_num"])*$offset_amount) . ".<p>";
-		echo "</table>";
+		echo "</table></div>";
 		echo "<p>Displaying results " . $_GET["offset_num"]*$offset_amount . "-" 
 		. ($_GET["offset_num"]+1)*$offset_amount . " out of " 
 		. ($i + ($_GET["offset_num"])*$offset_amount) . ".</p>";
