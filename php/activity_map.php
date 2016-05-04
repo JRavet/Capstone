@@ -148,6 +148,7 @@ SUM(CASE WHEN owner_color=\"Red\" THEN TIME_TO_SEC(duration_claimed) ELSE 0 END)
 $selectAdditions
 activity_data.obj_id as \"obj_id\",
 objective.name as \"Objective Name\",
+objective.obj_id as \"obj_id\",
 objective.type as \"obj_type\",
 coordx, coordy
 FROM activity_data 
@@ -255,7 +256,7 @@ WHERE activity_data.start_time = match_details.start_time $whereAdditions";
 		}
 		foreach ($resultSet as $r)
 		{
-			generate_googleChart(generate_jsontable($resultSet,array("Green Count", "Blue Count", "Red Count"),array($r["Green Count"],$r["Blue Count"],$r["Red Count"])),$r["Objective Name"],$r["Objective Name"],"",$r["coordx"]+$mapXoffset,$r["coordy"]+$mapYoffset,$r["obj_type"]);
+			generate_googleChart(generate_jsontable($resultSet,array("Green Count", "Blue Count", "Red Count"),array($r["Green Count"],$r["Blue Count"],$r["Red Count"])),$r["Objective Name"],$r["obj_id"],"",$r["coordx"]+$mapXoffset,$r["coordy"]+$mapYoffset,$r["obj_type"]);
 		}
 		?>
 	</body>
