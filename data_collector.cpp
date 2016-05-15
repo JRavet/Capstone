@@ -35,6 +35,17 @@ using namespace cURLpp;
 using namespace Options;
 using namespace std;
 /* */
+//
+/*
+stringstream *converter 	- pointer to the stringstream to use to convert a number to a string
+float valueToConvert 		- the number to turn into a string
+string *returnString		- the string to append the number to
+
+This function will take a specified pointer to a stringStream, a float (essentially any type of number), and a pointer to a string.
+It will insert the value of the valueToConvert into the stringstream using the '<<' operator, and append to the returnString using
+the string stream's string. It clears the stringstream afterwards.
+NOTE: The stringstream MUST be cleared before usage
+*/
 void convertNumToString(stringstream *converter, float valueToConvert, string *returnString)
 {
 	(*converter) << valueToConvert;
@@ -42,16 +53,24 @@ void convertNumToString(stringstream *converter, float valueToConvert, string *r
 	converter->str("");
 	converter->clear();
 }
-/* */
+/* 
+string guildID			- the hexcode ID of the guild to check the database (and GW2 API) for
+sql::Connection *con	- the database connection object
+bool *force_resync		- a boolean which signifies if a forceful resync must occur due to errors
+
+This function takes the given guildID and compares it to all guildIDs in the database.
+If there are no matches, it will query the API for the guild info and store the result into the database.
+If a match is found in the database, it will do nothing more.
+*/
 void check_guildClaim(string guildID, sql::Connection *con, bool *force_resync)
 {
 	sql::Statement *stmt;
 	sql::ResultSet *res;
-	stmt = con->createStatement();
+	stmt = con->createStatement(); //create a statement to be used later
 	try
 	{
 		res = stmt->executeQuery("select * from guild where guild_id=\"" + guildID +"\"");
-	}
+	} //attempt to query the database to see if a guild with the given guildID exists in it
 	catch (sql::SQLException &e)
 	{
 	//	cout << e.what() << endl;
@@ -63,17 +82,18 @@ void check_guildClaim(string guildID, sql::Connection *con, bool *force_resync)
 		stringstream guildDetails;
 		Json::Value guild_data;
 		Json::Reader reader;
-		/* */
+		/* Create an API request skeleton */
 		request.setOpt(cURLpp::Options::WriteStream(&guildDetails));
-		request.setOpt(Url("https://api.guildwars2.com/v1/guild_details.json?guild_id=" + guildID));		
+		request.setOpt(Url("https://api.guildwars2.com/v1/guild_details.json?guild_id=" + guildID));	
+		//ask for the guild data using the provided guildID	
 		try
 		{
 			request.perform();
 			/* */
 			if (reader.parse(guildDetails.str(), guild_data))
-			{
+			{ //if the API-query was successful and it was parsed properly
 				try
-				{
+				{ //attempt to store the guild info into the database
 					stmt->execute("INSERT INTO guild VALUES(\"" + guildID + "\",\"" + guild_data["guild_name"].asString() + "\",\"" + guild_data["tag"].asString() + "\");");
 				}
 				catch (sql::SQLException &e)
@@ -83,7 +103,7 @@ void check_guildClaim(string guildID, sql::Connection *con, bool *force_resync)
 			}
 		}
 		catch (exception &e)
-		{
+		{ //an error occurred contacting the API; force a resync on the next loop in the main body
 			(*force_resync) = true;
 			cout << e.what() << endl;
 		}
@@ -91,7 +111,14 @@ void check_guildClaim(string guildID, sql::Connection *con, bool *force_resync)
 	delete stmt;
 	delete res;
 }
-/* */
+/* 
+string time1			- The first (earlier) timeStamp to compare. Must be in "YYYY-MM-DDThh:mm:ssz" format (API format)
+string time2			- The second (later) timeStamp to compare. Must be in "YYYY-MM-DD hh:mm:ss" format (database format)
+string *return_string	- The string to append the difference-in-time to
+
+This function takes two strings, each containing a timeStamp (with formats specified above) and finds the difference in time
+	between them. It will append a proper SQL TIME formatted string to the return_string.
+*/
 void compare_timeStamps(string time1, string time2, string *return_string)
 { //time1 > time2
 	stringstream converter;
@@ -105,16 +132,24 @@ void compare_timeStamps(string time1, string time2, string *return_string)
 	(*return_string) = ""; //clear the return string for new input
 	int totalSeconds = difftime(t1,t2); //the total time elapsed between timestamps
 	int seconds=0,minutes=0,hours=0; //the 'parsed' seconds/minutes/hours
-	seconds = totalSeconds % 60;
-	minutes = (int) ((totalSeconds / 60) % 60);
-	hours = (int) ((totalSeconds / 3600) % 60);
+	seconds = totalSeconds % 60; //The number of seconds, between 0 and 59
+	minutes = (int) ((totalSeconds / 60) % 60); //The number of minutes, between 0 and 59
+	hours = (int) ((totalSeconds / 3600) % 60); //The number of hours, between 0 and the max integer limit
 	convertNumToString(&converter,hours,return_string); //append the hours elapsed to the return string
 	(*return_string) += ":";
 	convertNumToString(&converter,minutes,return_string); //append the minutes elapsed to the return string
 	(*return_string) += ":";
 	convertNumToString(&converter,seconds,return_string); //append the seconds elapsed to the return string
 }
-/* */
+/* 
+const Json::Value *match_data	- the trunk of a given match data set
+const Json::Value *objectivee	- the specific objective to update duration_owned and duration_claimed values for
+sql::connection *con			- the database connection object
+string *current_time			- A SQL TIME formatted string containing the current timeStamp value
+
+This function updates an activity_data's duration_owned and duration_claimed attributes whenever the 
+	objective has changed claims or ownership.
+*/
 void update_activityData(const Json::Value *match_data, const Json::Value *objective, sql::Connection *con, string *current_time)
 {
 	string updateStmt = "";
@@ -124,8 +159,12 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 		sql::Statement *stmt;
 		sql::ResultSet *res;
 		bool updateRow = false; //initialize to false; its true if there are any updates to be made
-		stmt = con->createStatement();
-		string previous_data_stmt = "SELECT last_flipped, claimed_at, guild_id FROM activity_data WHERE";
+		stmt = con->createStatement(); //create a statement object to be used later
+		//begin building the query-string
+		//we're attempting to find the last activity_data point (by timeStamp) with ...
+		//the given match_id, start_time, and obj_id
+		//additionally, we're formatting some time-data for use in the query and when comparing date-times
+		string previous_data_stmt = "SELECT last_flipped, claimed_at, guild_id FROM activity_data WHERE"; //begin building the SQL statement
 		previous_data_stmt += " match_id = \"" + (*match_data)["id"].asString() + "\"";
 			string start_time = (*match_data)["start_time"].asString();
 			start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
@@ -136,38 +175,39 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 			last_flipped.erase(19,1); // ^^
 		previous_data_stmt += " and start_time = \"" + start_time + "\"";
 		previous_data_stmt += " and obj_id = \"" + (*objective)["id"].asString() + "\" ORDER BY timeStamp DESC LIMIT 1;";
-		res = stmt->executeQuery(previous_data_stmt);
+		//end of query-string building
+		res = stmt->executeQuery(previous_data_stmt); //execute the query
 		if (res->next())
 		{ //if there is a previous entry for the given objective
-			string duration_claimed = "00:00:00";
-			string duration_owned = "00:00:00";
-			string previous_claimed_at = res->getString("claimed_at");
-			string previous_last_flipped = res->getString("last_flipped");
+			string duration_claimed = "00:00:00"; //initialize the attributes to 00:00:00
+			string duration_owned = "00:00:00"; //initialize the attributes to 00:00:00
+			string previous_claimed_at = res->getString("claimed_at"); //get the previous claimed_at time ...
+			string previous_last_flipped = res->getString("last_flipped"); // ... and the previous last_flipped time
 			if (previous_claimed_at.compare("0000-00-00 00:00:00") != 0 && res->getString("guild_id").compare((*objective)["claimed_by"].asString()) != 0)
 			{ //if the previous duration claimed is NOT "0000-00-00 00:00:00" (ie, it was claimed) and there is a new claim on it
 				//calculate claim duration
-				string time_claimed = (*current_time);
+				string time_claimed = (*current_time); //set the time_claimed to the current time by default
 				time_claimed[9] = 'T';
-				time_claimed += "Z";
-				if ((*objective)["claimed_at"].asString().compare("") != 0)
-				{ //if the objective was re-claimed, don't use the timestamp to get claim duration; use the real data
+				time_claimed += "Z"; //manually reformatting time_claimed to be in API-format for comparison in compare_timeStamps
+				if ((*objective)["claimed_at"].asString().compare("") != 0) //if there is a new claim on it ...
+				{ // ... don't use the timestamp to get claim duration; use the real data
 					time_claimed = (*objective)["claimed_at"].asString();
 				}
-				compare_timeStamps(time_claimed, previous_claimed_at, &duration_claimed);
-				updateRow = true;
+				compare_timeStamps(time_claimed, previous_claimed_at, &duration_claimed); //get the difference in times between claims
+				updateRow = true; //the row needs to be updated, but more processing must be done ...
 			}
 			if (last_flipped != previous_last_flipped)
 			{ //if the objective has changed ownership since last time
 				//calculate owned duration
 				compare_timeStamps((*objective)["last_flipped"].asString(), previous_last_flipped, &duration_owned);
-				updateRow = true;
+				updateRow = true; //the row needs to be updated
 			}
 			//
-			if (updateRow == true)
+			if (updateRow == true) //if there was a change in claims, or ownership, then the row needs to be updated
 			{
 				updateStmt = "UPDATE activity_data SET duration_claimed = \"" + duration_claimed + "\", duration_owned = \"" + duration_owned + "\" WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and start_time = \"" + start_time + "\" and obj_id = \"" + (*objective)["id"].asString() + "\" ORDER BY timeStamp DESC LIMIT 1;";
-				stmt->execute(updateStmt);
-			}
+				stmt->execute(updateStmt); //update the row
+			} //if the row does not need to be updated, then nothing is modified and the function will exit normally
 		}		
 		delete stmt;
 		delete res;
@@ -177,49 +217,66 @@ void update_activityData(const Json::Value *match_data, const Json::Value *objec
 		cout << e.what() << endl;
 	}
 }
+/*
+const Json::Value *match_data	- the trunk of match data for a single match
+int mapNum						- the map index number (0-3)
+sql::Connection *con			- the database connection object
+double ingame_clock_time		- the internal counter for the ingame clock's time
+string *current_time			- the current time in SQL TIME format
+bool *force_resync				- the boolean to force a resync if an API error occurs
+
+This function takes an entire map's worth of objectives and stores each objective-state as activity_data
+	in the database. It calls update_activityData to set previous activity_datas' duration_owned and
+		duration_claimed attributes.
+*/
 void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, string *current_time, bool *force_resync)
 {
 	stringstream converter;
 	sql::Statement *stmt;
 	string SQLstmt = "";
-	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"];
-	for (int i = 0; i < (int)objectives.size(); i++)
+	const Json::Value objectives = (*match_data)["maps"][mapNum]["objectives"]; //an array of objective data
+	for (int i = 0; i < (int)objectives.size(); i++) //iterate through each object in the objective array
 	{
-		update_activityData(match_data,&objectives[i],con,current_time);
-		SQLstmt = "INSERT INTO activity_data VALUES(";
-		SQLstmt += "\"" + objectives[i]["last_flipped"].asString() + "\"";
-		SQLstmt += ",\"" + objectives[i]["id"].asString() + "\",";
-		//
-		if (objectives[i]["owner"].asString() == "Red")
-		{
-			convertNumToString(&converter,(*match_data)["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-		}
-		else if (objectives[i]["owner"].asString() == "Blue")
-		{
-			convertNumToString(&converter,(*match_data)["worlds"][SECOND_SRV].asInt(),&SQLstmt);
-		}
-		else if (objectives[i]["owner"].asString() == "Green")
-		{
-			convertNumToString(&converter,(*match_data)["worlds"][FIRST_SRV].asInt(),&SQLstmt);
-		}
-		else
-		{
-			SQLstmt += "0"; //no PPT value
-		}
-		check_guildClaim(objectives[i]["claimed_by"].asString(),con,force_resync);
-		SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\",";
-		convertNumToString(&converter,ingame_clock_time,&SQLstmt);
-		SQLstmt += ",\"" + objectives[i]["owner"].asString() + "\"";
-		SQLstmt += ",\"" + objectives[i]["claimed_at"].asString() + "\"";
-		SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
-		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
-		SQLstmt += ",NULL, NULL"; //duration_ owned/claimed; updated at a later time
-		SQLstmt += ",\"" + (*current_time);
-		SQLstmt += "\");";
+		update_activityData(match_data,&objectives[i],con,current_time); 
+		//update the previous row (if any) of the objective-data in the database ...
+		// ... to have duration_owned and duration_claimed
+		//begin SQL string building
+			SQLstmt = "INSERT INTO activity_data VALUES(";						
+			SQLstmt += "\"" + objectives[i]["last_flipped"].asString() + "\"";
+			SQLstmt += ",\"" + objectives[i]["id"].asString() + "\",";
+			//
+			if (objectives[i]["owner"].asString() == "Red")
+			{
+				convertNumToString(&converter,(*match_data)["worlds"][THIRD_SRV].asInt(),&SQLstmt);
+			}
+			else if (objectives[i]["owner"].asString() == "Blue")
+			{
+				convertNumToString(&converter,(*match_data)["worlds"][SECOND_SRV].asInt(),&SQLstmt);
+			}
+			else if (objectives[i]["owner"].asString() == "Green")
+			{
+				convertNumToString(&converter,(*match_data)["worlds"][FIRST_SRV].asInt(),&SQLstmt);
+			}
+			else
+			{
+				SQLstmt += "0"; //neutral-server
+			}
+			check_guildClaim(objectives[i]["claimed_by"].asString(),con,force_resync); 
+				//add the guild that claimed the objective to the database if it doesn't exist yet
+			SQLstmt += ",\"" + objectives[i]["claimed_by"].asString() + "\",";
+			convertNumToString(&converter,ingame_clock_time,&SQLstmt);
+			SQLstmt += ",\"" + objectives[i]["owner"].asString() + "\"";
+			SQLstmt += ",\"" + objectives[i]["claimed_at"].asString() + "\"";
+			SQLstmt += ",\"" + (*match_data)["id"].asString() + "\"";
+			SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
+			SQLstmt += ",NULL, NULL"; //duration_ owned/claimed; updated at a later time
+			SQLstmt += ",\"" + (*current_time);
+			SQLstmt += "\");";
+		//end SQL string building
 		try
 		{
 			stmt = con->createStatement();
-			stmt->execute(SQLstmt);
+			stmt->execute(SQLstmt); //execute the statement to store the data into the database
 		}
 		catch (sql::SQLException &e)
 		{
@@ -228,12 +285,19 @@ void store_activityData(const Json::Value *match_data, int mapNum, sql::Connecti
 		delete stmt;
 	}
 }
-/* */
+/*
+int grn_srv, blu_srv, red_srv	- the 4-digit server id's for each server in a given matchup
+string *SQLstmt					- the SQLstmt to append the server populations to
+bool *force_resync				- if an API error occurs, force a resync in the main body
+
+This function queries the API for the three given server's populations and appends the population data 
+	to the SQLstmt
+*/
 void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLstmt, bool *force_resync)
 {
 	if (grn_srv == 0 && blu_srv == 0 && red_srv == 0)
-	{
-		(*SQLstmt) += ",NULL,NULL,NULL";
+	{ //if all server ids are 0 (due to bad data), return early.
+		(*SQLstmt) += ",NULL,NULL,NULL"; //append NULL data to the SQL string
 		return;
 	}
 	Easy request;
@@ -248,18 +312,18 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 	convertNumToString(&result,blu_srv,&requestURL);
 	requestURL += ",";
 	convertNumToString(&result,red_srv,&requestURL);
-	request.setOpt(Url(requestURL));
+	request.setOpt(Url(requestURL)); //make a request to the API for world-info on the 3 given servers
 	try
 	{
 		request.perform();
 		/* */
 		if (parser.parse(result.str(), server_populations))
-		{ //TODO not the prettiest; refine later
+		{ //parse the data from the API
 			(*SQLstmt) += ",\"";			
 			for (unsigned int i = 0; i < server_populations.size(); i++)
 			{
 				if (server_populations[i]["id"].asInt() == grn_srv)
-				{
+				{ //properly "align" the data to store the green server population first
 					(*SQLstmt) += server_populations[i]["population"].asString();
 					break;
 				}
@@ -269,7 +333,7 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 			for (unsigned int i = 0; i < server_populations.size(); i++)
 			{
 				if (server_populations[i]["id"].asInt() == blu_srv)
-				{
+				{ //properly "align" the data to store the blue server population second
 					(*SQLstmt) += server_populations[i]["population"].asString();
 					break;
 				}
@@ -279,7 +343,7 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 			for (unsigned int i = 0; i < server_populations.size(); i++)
 			{
 				if (server_populations[i]["id"].asInt() == red_srv)
-				{
+				{ //properly "align" the data to store the red server population last
 					(*SQLstmt) += server_populations[i]["population"].asString();
 					break;
 				}
@@ -293,7 +357,13 @@ void get_server_populations(int grn_srv, int blu_srv, int red_srv, string *SQLst
 		(*force_resync) = true;
 	}
 }
-/* */
+/*
+string *weekNum		- the string to append the week number to
+string match_time	- the given match's start time
+
+This function takes a given match's start_time, computes the difference in time to the
+	beginning of the year, in number of weeks, and appends that value to weekNum
+*/
 void get_weekNumber(string *weekNum, string match_time)
 {
 	struct tm * matchTime_tm;
@@ -306,7 +376,15 @@ void get_weekNumber(string *weekNum, string match_time)
 	strftime (weekNumber,3,"%U",matchTime_tm); //get the weeknumber and store it in the character array
 	(*weekNum) = weekNumber; //append the week number to the return-string
 }
-/* */
+/*
+const Json::Value *match_data	- The trunk of all match data
+string region					- The region (1 for NA, 2 for EU) to store data for
+sql::Connection *con			- The database connection object
+bool *force_resync				- If an API error occurs, force a resync in the main body
+
+This function takes an entire region's worth of match_data and stores the weekly details into the database as match_details
+It calls get_weekNumber and get_server_populations.
+*/
 void store_matchDetails(const Json::Value *match_data, string region, sql::Connection *con, bool *force_resync)
 {
 	stringstream converter;
@@ -315,68 +393,70 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 	string SQLstmt;
 	string weekNum;
 	stmt = con->createStatement();
+	//initialize some variables
 	for (int i = 0; i < (int)(*match_data).size(); i++)
-	{
+	{ //iterate through each set of match_data individually
 		if ((((*match_data)[i]["id"]).asString())[0] == region[0])
-		{
+		{ //only store data for the given region
 			try
-			{
+			{ //check if the data for the given matchup already exists in the database
 				res = stmt->executeQuery("SELECT * FROM match_details WHERE match_id = \"" + (*match_data)[i]["id"].asString() + "\" and start_time =\"" + (*match_data)[i]["start_time"].asString() + "\";");
-			}
+			} //if it already exists, this iteration will exit without modifying the database
 			catch (sql::SQLException &e)
 			{
 				cout << e.what() << endl;
 			}
 			if (!res->next()) //if this set of match_details does not already exist in the DB
 			{
-				get_weekNumber(&weekNum, (*match_data)[i]["start_time"].asString());
-				SQLstmt = "INSERT INTO match_details VALUES(";
-				SQLstmt += "\"" + (*match_data)[i]["id"].asString() + "\"";
-				SQLstmt += ",\"" + weekNum + "\"";
-				SQLstmt += ",\"" + (*match_data)[i]["start_time"].asString() + "\"";
-				SQLstmt += ",\"" + (*match_data)[i]["end_time"].asString() + "\",";
-				convertNumToString(&converter, (*match_data)[i]["worlds"][FIRST_SRV].asInt(),&SQLstmt);
-				SQLstmt += ",";
-				convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
-				SQLstmt += ",";
-				convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
-				get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt,force_resync);
-				SQLstmt += ",";
-				int red2id=0,blu2id=0,grn2id=0;
-				if ((*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt() == (*match_data)[i]["worlds"][FIRST_SRV].asInt())
-				{
-					SQLstmt += "NULL";
-				}
-				else
-				{
-					convertNumToString(&converter, (*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt(),&SQLstmt);
-					grn2id=(*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt();
-				}
-				SQLstmt += ",";
-				if ((*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt() == (*match_data)[i]["worlds"][SECOND_SRV].asInt())
-				{
-					SQLstmt += "NULL";
-				}
-				else
-				{
-					convertNumToString(&converter, (*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt(),&SQLstmt);
-					blu2id=(*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt();
-				}
-				SQLstmt += ",";	
-				if ((*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt() == (*match_data)[i]["worlds"][THIRD_SRV].asInt())
-				{
-					SQLstmt += "NULL";
-				}
-				else
-				{
-					convertNumToString(&converter, (*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt(),&SQLstmt);
-					red2id=(*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt();
-				}
-				get_server_populations(grn2id,blu2id,red2id,&SQLstmt,force_resync);
-				SQLstmt += ");";
-				//
+				get_weekNumber(&weekNum, (*match_data)[i]["start_time"].asString()); //get the week number of the match
+				//begin SQL string building
+					SQLstmt = "INSERT INTO match_details VALUES(";
+					SQLstmt += "\"" + (*match_data)[i]["id"].asString() + "\"";
+					SQLstmt += ",\"" + weekNum + "\"";
+					SQLstmt += ",\"" + (*match_data)[i]["start_time"].asString() + "\"";
+					SQLstmt += ",\"" + (*match_data)[i]["end_time"].asString() + "\",";
+					convertNumToString(&converter, (*match_data)[i]["worlds"][FIRST_SRV].asInt(),&SQLstmt);
+					SQLstmt += ",";
+					convertNumToString(&converter, (*match_data)[i]["worlds"][SECOND_SRV].asInt(),&SQLstmt);
+					SQLstmt += ",";
+					convertNumToString(&converter, (*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt);
+					get_server_populations((*match_data)[i]["worlds"][FIRST_SRV].asInt(),(*match_data)[i]["worlds"][SECOND_SRV].asInt(),(*match_data)[i]["worlds"][THIRD_SRV].asInt(),&SQLstmt,force_resync);
+					SQLstmt += ",";
+					int red2id=0,blu2id=0,grn2id=0;
+					if ((*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt() == (*match_data)[i]["worlds"][FIRST_SRV].asInt())
+					{
+						SQLstmt += "NULL";
+					}
+					else
+					{
+						convertNumToString(&converter, (*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt(),&SQLstmt);
+						grn2id=(*match_data)[i]["all_worlds"][FIRST_SRV][0].asInt();
+					}
+					SQLstmt += ",";
+					if ((*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt() == (*match_data)[i]["worlds"][SECOND_SRV].asInt())
+					{
+						SQLstmt += "NULL";
+					}
+					else
+					{
+						convertNumToString(&converter, (*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt(),&SQLstmt);
+						blu2id=(*match_data)[i]["all_worlds"][SECOND_SRV][0].asInt();
+					}
+					SQLstmt += ",";	
+					if ((*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt() == (*match_data)[i]["worlds"][THIRD_SRV].asInt())
+					{
+						SQLstmt += "NULL";
+					}
+					else
+					{
+						convertNumToString(&converter, (*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt(),&SQLstmt);
+						red2id=(*match_data)[i]["all_worlds"][THIRD_SRV][0].asInt();
+					}
+					get_server_populations(grn2id,blu2id,red2id,&SQLstmt,force_resync);
+					SQLstmt += ");";
+				//end SQL string building
 				try
-				{
+				{ //execute the SQL statement to store the match details
 					stmt->execute(SQLstmt);
 				}
 				catch (sql::SQLException &e)
@@ -386,47 +466,58 @@ void store_matchDetails(const Json::Value *match_data, string region, sql::Conne
 			}
 			try
 			{
-				delete res;
-			}
+				delete res; //attempt the delete the resultset before iterating again
+			} //may fail if no data was returned to begin with
 			catch (exception &e)
-			{
+			{ //the try-catch lets the iterating continue anyway
 				cout << e.what() << endl;
 			}
 		}
 	}
 	delete stmt;
 }
+/*
+const Json::Value *match_data	- The trunk of match data for a single match
+int mapNum						- The index of the map to check the ppt (point per tick) value
+string *SQLstmt					- The SQL string to append the data to
+stringstream *converter			- The stringstream to use for converting numbers to strings
+sql::Connection *con			- The database connection object
+
+This function iterates through each objective on the given map for a given match and totals up
+	the green, blue and red ppt (point per tick) values. These values are appended the SQLstmt
+*/
 void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, stringstream *converter, sql::Connection *con)
 {
 	sql::Statement *stmt;
-	sql::ResultSet *res; //TODO look at optimizing this loop; it queries the DB a lot
+	sql::ResultSet *res;
 	stmt = con->createStatement();
-	int green_ppt = 0, blue_ppt = 0, red_ppt = 0;
+	int green_ppt = 0, blue_ppt = 0, red_ppt = 0; //initialize each ppt value to 0
 	for (int i = 0; i < (int)(*match_data)["maps"][mapNum]["objectives"].size(); i++)
-	{
+	{ //iterate through each objective on the map
 		try
 		{
 			res = stmt->executeQuery("SELECT ppt_value FROM objective WHERE obj_id = \"" + (*match_data)["maps"][mapNum]["objectives"][i]["id"].asString() + "\";");
-			res->next();
+			res->next(); //query the database for the objective's (not activity_data) ppt value
 			if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Green")
-			{
+			{ //if the current owner is green, add the objective's ppt to green_ppt
 				green_ppt += res->getInt("ppt_value");
 			}
 			else if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Blue")
-			{
+			{ //if the current owner is blue, add the objective's ppt to green_ppt
 				blue_ppt += res->getInt("ppt_value");
 			}
 			else if ((*match_data)["maps"][mapNum]["objectives"][i]["owner"].asString() == "Red")
-			{
+			{ //if the current owner is red, add the objective's ppt to green_ppt
 				red_ppt += res->getInt("ppt_value");
 			}
-			delete res;
+			delete res; //free the memory inside the loop!
 		}
 		catch (sql::SQLException &e)
 		{
 			cout << e.what() << endl;	
 		}
 	}
+	//append the total ppt values for each color to the SQLstmt
 	(*SQLstmt) += ",";
 	convertNumToString(converter,green_ppt,SQLstmt);
 	(*SQLstmt) += ",";
@@ -435,7 +526,13 @@ void get_server_ppt(const Json::Value *match_data, int mapNum, string *SQLstmt, 
 	convertNumToString(converter,red_ppt,SQLstmt);
 	delete stmt;
 }
-/* */
+/*
+string data		- The data to append
+string *SQLstmt	- the string to append to
+
+This function simply adds a "0" if the data string is empty; otherwise it just
+	concatenates two strings.
+*/
 void append_server_stats(string data, string *SQLstmt)
 {
 	if (data == "")
@@ -444,29 +541,40 @@ void append_server_stats(string data, string *SQLstmt)
 	}
 	(*SQLstmt) += data;
 }
-void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, string * current_time)
+/*
+const Json::Value *match_data	- The trunk of match data for a single match
+int mapNum						- The index of the map number (0-3)
+sql::Connection *con			- The database connection object
+string *current_time			- The current timeStamp in SQL TIME format
+
+This function stores an individual map's score, kills, deaths and ppt totals, for each color, in a specific matchup, into the database
+It calls get_server_ppt
+*/
+void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection *con, string *current_time)
 {
 	stringstream converter;
 	sql::Statement *stmt;
 	sql::ResultSet *res;
 	stmt = con->createStatement();
-	bool errorCorrected = false;
-    //
-    string SQLstmt = "INSERT INTO map_scores VALUES(\"";
-   	SQLstmt += (*current_time);
-    SQLstmt += "\",\"" + (*match_data)["id"].asString() + "\"";
-    SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
-    SQLstmt += ",\"" + (*match_data)["maps"][mapNum]["type"].asString() + "\",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][FIRST_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][SECOND_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-    convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][THIRD_SRV].asInt()),&SQLstmt);
-    SQLstmt += ",";
-	string start_time = (*match_data)["start_time"].asString();
-	start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
-	start_time.erase(19,1); // ^^
+	bool errorCorrected = false; //initially set to false; only true if previous map_score data is less than new data
+    //begin SQL string building
+		string SQLstmt = "INSERT INTO map_scores VALUES(\"";
+	   	SQLstmt += (*current_time);
+		SQLstmt += "\",\"" + (*match_data)["id"].asString() + "\"";
+		SQLstmt += ",\"" + (*match_data)["start_time"].asString() + "\"";
+		SQLstmt += ",\"" + (*match_data)["maps"][mapNum]["type"].asString() + "\",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][FIRST_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][SECOND_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		convertNumToString(&converter,((*match_data)["maps"][mapNum]["scores"][THIRD_SRV].asInt()),&SQLstmt);
+		SQLstmt += ",";
+		string start_time = (*match_data)["start_time"].asString();
+		start_time[10] = ' '; //manually reformatting the time-string from the API format to a mySQL format
+		start_time.erase(19,1); // ^^
+	//end SQL string building
 	res = stmt->executeQuery("SELECT timeStamp, "FIRST_SRV"Kills, "SECOND_SRV"Kills, "THIRD_SRV"Kills, "FIRST_SRV"Deaths, "SECOND_SRV"Deaths, "THIRD_SRV"Deaths FROM map_scores WHERE match_id = \"" + (*match_data)["id"].asString() + "\" and map_id = \"" + (*match_data)["maps"][mapNum]["type"].asString() + "\" and start_time = \"" + start_time + "\" and error_corrected = 0 ORDER BY timeStamp DESC LIMIT 1;");
+	//query the database for the previous set of score/kill/death data for the given matchup and map
 	int firstKills,firstDeaths,secondKills,secondDeaths,thirdKills,thirdDeaths;
 	firstKills = ((*match_data)["maps"][mapNum]["kills"][FIRST_SRV].asInt());
 	secondKills = ((*match_data)["maps"][mapNum]["kills"][SECOND_SRV].asInt());
@@ -490,6 +598,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 			errorCorrected = true; //mark the new row as error corrected
 		}
   	}
+  	//more SQL string building
 	convertNumToString(&converter,firstKills,&SQLstmt);
 	SQLstmt += ",";
 	convertNumToString(&converter,secondKills,&SQLstmt);
@@ -502,8 +611,9 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 	SQLstmt += ",";
 	convertNumToString(&converter,thirdDeaths,&SQLstmt);
     get_server_ppt(match_data, mapNum, &SQLstmt, &converter, con);
+    //get the ppt value for each color on this map
 	if (errorCorrected == true)
-    {
+    { //if API-errors were corrected, mark the row as such
    		SQLstmt += ",1";
     }
     else
@@ -512,7 +622,7 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
     }
     SQLstmt += ");";
     try
-	{
+	{ //store the data into the database
 		stmt->execute(SQLstmt);
 	}
 	catch (sql::SQLException &e)
@@ -520,9 +630,19 @@ void store_mapScores(const Json::Value *match_data, int mapNum, sql::Connection 
 		cout << e.what() << endl;
 	}
 	delete res;
-	delete stmt;
+	delete stmt; //free the memory used by the SQL objects
 }
-/* */
+/* 
+string region				- The region to obtain data for (1 for NA, 2 for EU)
+sql::Connection *con		- The database connection object
+double ingame_clock_time	- The internal counter representing the ingame clock time
+bool *stored_matchDetails	- Determines if this week's match details have been stored yet or not
+								-> resets when region start_time differs
+bool *force_resync			- Force a resync in the main body if an API error occurs
+string *previous_start_time	- The previous start_time for the region; used to determine when to store new match_details
+
+TODO
+*/
 void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time, bool *stored_matchDetails, bool *force_resync, string *previous_start_time)
 { //region: 1 = NA, 2 = EU
 	Easy request;
@@ -532,7 +652,7 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 	struct tm * UTCTime;
 	/* */
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
-	request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches?ids=all"));
+	request.setOpt(Url("https://api.guildwars2.com/v2/wvw/matches?ids=all")); //gets every matchup from the API
 	//get the current time in UTC format to pass later
 	time_t t = time(NULL); //get current local time
 	UTCTime = gmtime( &t ); //convert current time to UTC
@@ -713,7 +833,6 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 }
 int main (int argc, char *argv[])
 {
-	
 	pthread_t region1, region2;
 	const char *args1 = "1";
 	const char *args2 = "2";
