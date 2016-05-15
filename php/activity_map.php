@@ -63,8 +63,8 @@ include 'bootstrap_styling.php';
 		};
 		var div = document.getElementById(\"$idName\");
 		div.style.position=\"absolute\";
-		div.style.left=(($x/5.5))-975-$size/2+45+'px'; //5.5, -965
-		div.style.top=(($y/5.5))-1030-$size/2+45+'px'; //5.5, -1160
+		div.style.left=(($x/5.5))-975-$size/2+45+'px'; //5.5, -975 5.5
+		div.style.top=(($y/5.5))-1030-$size/2+45+'px'; //5.5, -1030 5.5
 		new google.visualization.PieChart(div).draw(data,options);
 	}
 	</script>
@@ -250,7 +250,7 @@ WHERE activity_data.start_time = match_details.start_time $whereAdditions";
 		}
 		else
 		{
-			echo "<img src=\"gw2_alpine_map.jpg\" style=\"width:1950;height:1400;position:absolute;z-index:-1;\">";
+			echo "<img src=\"gw2_alpine_map.jpg\" style=\"width:2048;height:1490;position:absolute;z-index:-1;\">";
 			$mapXoffset=0;
 			$mapYoffset=0;
 		}
