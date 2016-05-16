@@ -641,7 +641,10 @@ bool *stored_matchDetails	- Determines if this week's match details have been st
 bool *force_resync			- Force a resync in the main body if an API error occurs
 string *previous_start_time	- The previous start_time for the region; used to determine when to store new match_details
 
-TODO
+This function queries the Gw2 API for all match data, constructs a timeStamp to be used in other functions, and calls
+	other functions to store the data, passing along the 'global' booleans, previous_time, and other required info.
+	
+Calls store_matchDetails (once a week), store_activityData (once a TIME_RES), and store_mapScores (once every 15 minutes)
 */
 void get_matchDetails(string region, sql::Connection *con, double ingame_clock_time, bool *stored_matchDetails, bool *force_resync, string *previous_start_time)
 { //region: 1 = NA, 2 = EU
@@ -656,48 +659,47 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 	//get the current time in UTC format to pass later
 	time_t t = time(NULL); //get current local time
 	UTCTime = gmtime( &t ); //convert current time to UTC
-	string current_time = "";
-	convertNumToString(&converter,(UTCTime->tm_year + 1900),&current_time);
-	current_time += "-";
-	convertNumToString(&converter,(UTCTime->tm_mon + 1),&current_time);
-	current_time += "-";
-	convertNumToString(&converter,(UTCTime->tm_mday),&current_time);
-	current_time += " ";
-	convertNumToString(&converter,(UTCTime->tm_hour),&current_time);
-	current_time += ":";
-	convertNumToString(&converter,(UTCTime->tm_min),&current_time);
-	current_time += ":";
-	convertNumToString(&converter,(UTCTime->tm_sec),&current_time);
+	//begin string processing to create a SQL TIME formatted timeStamp
+		string current_time = "";
+		convertNumToString(&converter,(UTCTime->tm_year + 1900),&current_time);
+		current_time += "-";
+		convertNumToString(&converter,(UTCTime->tm_mon + 1),&current_time);
+		current_time += "-";
+		convertNumToString(&converter,(UTCTime->tm_mday),&current_time);
+		current_time += " ";
+		convertNumToString(&converter,(UTCTime->tm_hour),&current_time);
+		current_time += ":";
+		convertNumToString(&converter,(UTCTime->tm_min),&current_time);
+		current_time += ":";
+		convertNumToString(&converter,(UTCTime->tm_sec),&current_time);
+	//end string processing
 	try
 	{
 		request.perform();
 		/* */
 		if (parser.parse(matchDetails.str(), all_match_data))
-		{
+		{ //if the data returned from the API can be parsed
 			if (!(*stored_matchDetails))
-			{
-				store_matchDetails(&all_match_data, region, con, force_resync);
+			{ //if the matchDetails haven't been stored for this week
+				store_matchDetails(&all_match_data, region, con, force_resync); //store the info
 				for (int k = 0; k < (int)all_match_data.size(); k++)
-				{
+				{ //iterate through all match data sets
 					if ((all_match_data[k]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
-					{
+					{ //find the first match data set that is in the desired region
 						(*previous_start_time) = (all_match_data[k]["start_time"].asString());
-						break;
+						break; //set the previous_start_time to that regions' start time, and exit out of the loop
 					}
 				}
-				(*stored_matchDetails) = true;
+				(*stored_matchDetails) = true; //the match details have been stored for this week
 			}
 			for (int j = 0; j < (int)all_match_data.size(); j++)
-			{
-				if ((all_match_data[j]["id"].asString())[0] == region[0]) //filter down to matches in the region's range
-				{
+			{ //loop through all match data sets
+				if ((all_match_data[j]["id"].asString())[0] == region[0])
+				{ //only process matc data sets in the specified region
 					for (int i = 0; i < (int)all_match_data[j]["maps"].size(); i++)
-					{
+					{ //loop through each map of each match data set
 						store_activityData(&all_match_data[j], i, con, ingame_clock_time, &current_time, force_resync);
-						if (ingame_clock_time == 15)
-						{
-							//get ppt values
-						}
+						//store the activity_data for each map of each match
 						if (ingame_clock_time == 14)
 						{ //only store mapscore data every point-tally in-game
 							store_mapScores(&all_match_data[j], i, con, &current_time);
@@ -713,6 +715,17 @@ void get_matchDetails(string region, sql::Connection *con, double ingame_clock_t
 		cout << e.what() << endl;
 	}
 }
+/*
+string region				- The region to sync to (1 for NA, 2 for EU)
+double timeToSleep			- The time (in microseconds) to sleep initially
+bool *stored_matchDetails	- Whether or not the match details for the week have been stored yet.
+								-> Reset when the new start_time is not equal to the previous_start_time
+string *previous_start_time	- The previously recorded start_time for the week's matches
+
+This function synchronizes to the in-game clock by comparing a match's total score (red+blue+green) every 5 seconds.
+It loops indefinitely until it has synchronized to the in-game clock.
+When the current score is 635 (or more) above the previous score, a point-tick has occurred in the game, and this function exits.
+*/
 void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchDetails, string *previous_start_time) //1 = NA, 2 = EU
 {
 	Easy request;
@@ -727,35 +740,37 @@ void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchD
 	request.setOpt(Url(match_url));
 	request.setOpt(cURLpp::Options::WriteStream(&matchDetails));
 	if (timeToSleep < 0)
-	{
+	{ //if there is a negative value for timeToSleep, set it to 0 instead
 		timeToSleep = 0;
 	}
 	usleep(timeToSleep); //wait some seconds to reduce the number of API calls made
 	while (1)
-	{
+	{ //loop indefinitely; a break is called when it has synchronized
 		try
 		{
-			request.perform();
+			request.perform(); //perform the same request every loop
 			if (parser.parse(matchDetails.str(), score_data))
-			{
+			{ //parse the data retrieved from the API
 				cout << "Syncing ..." << region << endl;
 				if ((*stored_matchDetails) && score_data["start_time"].asString() != (*previous_start_time))
-				{
+				{ //if the new start_time for the region is not the same as the previous start_time, then we need
+					//to store a new set of match_details after this function exits
 					cout << "NEW MATCH!" << endl;
 					(*stored_matchDetails) = false;
 				}
 				currentScore = score_data["scores"][FIRST_SRV].asInt() + score_data["scores"][SECOND_SRV].asInt() + score_data["scores"][THIRD_SRV].asInt();
+				//total up the current score, from all three servers combined
 				if (currentScore >= (previousScore+635))
-				{
-					break;
+				{ //if the current score is 635 (or more) over the previous score
+					break; //then the in-game clock is 14:00 and we've synchronized
 				}
-				previousScore = currentScore;
+				previousScore = currentScore; //if we haven't synchronized yet, update the previousScore with the current
 			}
 			else
 			{
 				cout << "Error parsing data in sync-loop!" << endl;
 			}
-			matchDetails.str("");
+			matchDetails.str(""); //clear the stringstream for the next API request
 			matchDetails.clear();
 		}
 		catch (exception &e)
@@ -763,63 +778,83 @@ void sync_to_ingame_clock(string region, double timeToSleep, bool *stored_matchD
 			cout << e.what() << endl;
 		}
 		/* */
-		usleep(MICROSEC*0.0833*TIME_RES); //sleep for 5 seconds
+		usleep(MICROSEC*5); //sleep for 5 seconds
 	}
 	/* */
 }
+/*
+void *ptr	- A single character which is either 1 or 2, denoting the region number
+				-> This void *ptr type is required for threads to pass along arguments
+				
+This function is the main body of the program.
+First, it connects to the database and creates a *sql::Connection object to pass to each function as needed
+Second, it does an initial synchronization to the in-game clock, to start the internal-counter correctly.
+After that, it enters an infinite loop.
+	It calls get_matchDetails, which is the single entry point to collect, process, and store data
+	It calculates the time it took to perform the above, to be used when idling at the end of the loop
+	It determines if it should resync, either due to an error contacting the API or due to taking too long to process data
+	It then determines if it should resychronize to the in-game clock (every 15 minutes), or if the internal counter needs to wrap back to 15
+	It subtracts one TIME_RES (default 60 seconds) from the interna clock
+	Then it idles for the determined time, which, combined with processing time, is equal to TIME_RES (default 60 seconds)
+*/
 void *collect_data(void *ptr) //1 = North American, 2 = European
 {
 	try 
     {
-    	const char *args = (char *) ptr;
-    	string region = "";
-    	region += args;
-    	sql::mysql::MySQL_Driver *driver;
-		sql::Connection *con;
-		sql::Statement *stmt;
-		driver = sql::mysql::get_mysql_driver_instance();
-		con = driver->connect(IPADDR, USERNAME, PASSWORD);
-		stmt = con->createStatement();
-		stmt->execute("USE " DATABASE);
-		delete stmt;
-		//
-		time_t beginTime, endTime;
-		double elapsed_msecs;
-		double ingame_clock_time = 14.0*60.0;
-		bool stored_matchDetails = false;
-		bool force_resync = false;
-		string previous_start_time = "";
+    	//reconstruct the region into a string to pass to functions as needed
+			const char *args = (char *) ptr;
+			string region = "";
+			region += args;
+    	//Connect to the database and create the sql::Connection *con object
+			sql::mysql::MySQL_Driver *driver;
+			sql::Connection *con;
+			sql::Statement *stmt;
+			driver = sql::mysql::get_mysql_driver_instance();
+			con = driver->connect(IPADDR, USERNAME, PASSWORD);
+			stmt = con->createStatement();
+			stmt->execute("USE " DATABASE);
+			delete stmt;
+		//initialize some variables to be used in the collection loop
+			time_t beginTime, endTime;
+			double elapsed_msecs;
+			double ingame_clock_time = 14.0*60.0;
+			bool stored_matchDetails = false;
+			bool force_resync = false;
+			string previous_start_time = "";
+		//synchronize to the in game clock initially to ensure the internal counter is correct
 		sync_to_ingame_clock(region,0,&stored_matchDetails,&previous_start_time);
     	while (1)
-		{
-			beginTime = time(0);
+		{ //loop indefinitely
+			beginTime = time(0); //get the current time
 			cout << "Beginning " << ingame_clock_time/60.0 << "| region " << region << endl;
 			get_matchDetails(region, con, ingame_clock_time/60.0,&stored_matchDetails,&force_resync,&previous_start_time);
+			//collect, process, and store data
 			cout << "Ending " << ingame_clock_time/60.0 << "| region " << region << endl;
-			endTime = time(0);
-			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC;
+			endTime = time(0); //get the current time after processing the data
+			elapsed_msecs = difftime(endTime, beginTime) * MICROSEC; //determine how long the loop should idle for at the end
 			cout << elapsed_msecs/MICROSEC << " seconds elapsed" << "| region " << region<< endl;
 			cout << "Time to sleep: " << (double)(MICROSEC*TIME_RES - elapsed_msecs)/MICROSEC << "| region " << region << endl;
 			if (elapsed_msecs/MICROSEC > TIME_RES || force_resync)
-			{
+			{ //if data processing took too long, or there was an issue contacting the API, resynchronize immediately
 				cout << "Too much time elapsed! Resyncing" << "| region " << region << endl;
-				ingame_clock_time = 15*60.0;
-				force_resync = false;
+				ingame_clock_time = 15*60.0; //by setting the ingame_clock_time to 15 minutes, the if-else below will resync for us
+				force_resync = false; //no longer need to force a resync
 			}
 			if (ingame_clock_time/60 == 15)
-			{
+			{ //if the in-game clock time is 15:00, then in the next 60 seconds, a point-tick will occur and we need to resync
 				cout << "Sync-wait: " << (MICROSEC*0.60*TIME_RES - elapsed_msecs)/MICROSEC << "| region " << region << endl;
 				sync_to_ingame_clock(region,MICROSEC*0.60*TIME_RES - elapsed_msecs,&stored_matchDetails,&previous_start_time); //resync to in-game clock every cycle
-				elapsed_msecs = MICROSEC*TIME_RES-1;
+				//resynchronize to the in-game clock
+				elapsed_msecs = MICROSEC*TIME_RES-1; //set the time to sleep to (effectively) 0 seconds
 			}
 			else if (ingame_clock_time <= TIME_RES)
-			{
-				ingame_clock_time = 15*60.0 + TIME_RES; //15 minutes + TIME_RES because 1 TIME_RES is subtracted below
+			{ //if the ingame_clock_time is less than one TIME_RES (default 60 seconds) then...
+				ingame_clock_time = 15*60.0 + TIME_RES; //... set TIME_RES to 15 minutes + TIME_RES because 1 TIME_RES is subtracted below
 			}
-			ingame_clock_time -= TIME_RES;
-			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs));
+			ingame_clock_time -= TIME_RES; //subtract one TIME_RES off of the internal clock (default 60 seconds)
+			usleep((double)(MICROSEC*TIME_RES - elapsed_msecs)); //sleep for the determined time
 		}
-		delete con;
+		delete con; //technically this is never reached... can't delete it prior, as it is used to create and execute statements
 	}
 	catch (RuntimeError & e)
 	{
@@ -829,8 +864,13 @@ void *collect_data(void *ptr) //1 = North American, 2 = European
 	{
 		cout << e.what() << endl;
 	}
-	return NULL;
+	return NULL; //required for multi-threading to function as determined by the compiler; never actually reached
 }
+/*
+This function creates two threads - one for NA, one for EU - and starts collecting data for each.
+
+Calls collect_data
+*/
 int main (int argc, char *argv[])
 {
 	pthread_t region1, region2;
