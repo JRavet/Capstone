@@ -228,6 +228,8 @@ bool *force_resync				- the boolean to force a resync if an API error occurs
 This function takes an entire map's worth of objectives and stores each objective-state as activity_data
 	in the database. It calls update_activityData to set previous activity_datas' duration_owned and
 		duration_claimed attributes.
+Calls update_activityData
+Calls check_guildClaim
 */
 void store_activityData(const Json::Value *match_data, int mapNum, sql::Connection *con, double ingame_clock_time, string *current_time, bool *force_resync)
 {
